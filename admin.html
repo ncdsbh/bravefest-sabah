@@ -100,7 +100,12 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycby5JysOKW16jVmcAzkQUAbrEjX9zJON0uCzdMCns95jEyeQn9dXVAFA-I_wtU5G2DurnQ/exec";
     let adminPin = "";
-    let participants = [];
+    
+    // Split into two arrays so recovery search always works
+    let allParticipants = []; 
+    let wheelParticipants = []; 
+    let winnersHistory = [];
+    
     let startAngle = 0;
     let arc = 0;
     let spinTimeout = null;
@@ -109,10 +114,7 @@
     let spinTimeTotal = 0;
     let ctx;
 
-    const colors = [
-      "#4f46e5", "#0ea5e9", "#10b981", "#f59e0b",
-      "#ec4899", "#8b5cf6", "#06b6d4", "#84cc16"
-    ];
+    const colors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#06b6d4", "#84cc16"];
 
     function verifyPin() {
       adminPin = document.getElementById("pinInput").value.trim();
@@ -120,25 +122,11 @@
       
       const btn = document.getElementById("btnAuth");
       btn.disabled = true;
-      // Inject the spinning icon directly before the text
       btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> Menyemak PIN...';
-      
-      // Change color and cursor to indicate loading state
       btn.classList.remove("bg-indigo-600", "hover:bg-indigo-700");
       btn.classList.add("bg-indigo-400", "cursor-wait");
       
       loadParticipants();
-    }
-
-    function resetAuthButton() {
-      const btn = document.getElementById("btnAuth");
-      btn.disabled = false;
-      // Revert to original text without the spinner
-      btn.innerHTML = 'Buka Panel';
-      
-      // Revert colors and cursor
-      btn.classList.remove("bg-indigo-400", "cursor-wait");
-      btn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
     }
 
     async function loadParticipants() {
@@ -153,10 +141,12 @@
         }
 
         document.getElementById("authOverlay").classList.add("hidden");
-        participants = data.names || [];
-        document.getElementById("totalParticipantsBadge").innerText = `${participants.length} Peserta`;
+        
+        allParticipants = data.names || [];
+        wheelParticipants = [...allParticipants]; // Copy for the wheel
+        document.getElementById("totalParticipantsBadge").innerText = `${wheelParticipants.length} Peserta`;
 
-        if (participants.length > 0) {
+        if (wheelParticipants.length > 0) {
           drawRouletteWheel();
         } else {
           drawEmptyWheel("Tiada Peserta");
@@ -171,8 +161,8 @@
       const btn = document.getElementById("btnAuth");
       btn.disabled = false;
       btn.innerHTML = 'Buka Panel';
-      btn.classList.replace("bg-indigo-400", "bg-indigo-600");
-      btn.classList.replace("cursor-not-allowed", "hover:bg-indigo-700");
+      btn.classList.remove("bg-indigo-400", "cursor-wait");
+      btn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
     }
 
     function drawEmptyWheel(text) {
@@ -196,12 +186,12 @@
       ctx.clearRect(0, 0, 380, 380);
 
       const outsideRadius = 180;
-      const textRadius = 120;
+      const textRadius = 115; // Pulled in slightly to fit two lines
       const insideRadius = 40;
 
-      arc = Math.PI * 2 / participants.length;
+      arc = Math.PI * 2 / wheelParticipants.length;
 
-      for (let i = 0; i < participants.length; i++) {
+      for (let i = 0; i < wheelParticipants.length; i++) {
         const angle = startAngle + i * arc;
         ctx.fillStyle = colors[i % colors.length];
 
@@ -217,9 +207,20 @@
           190 + Math.sin(angle + arc / 2) * textRadius
         );
         ctx.rotate(angle + arc / 2 + Math.PI);
-        const name = participants[i].name;
+        
+        const p = wheelParticipants[i];
+        const dispName = p.name.length > 15 ? p.name.substring(0, 13) + "…" : p.name;
+        const dispAddr = p.address.length > 15 ? p.address.substring(0, 13) + "…" : p.address;
+
+        // Draw Name
         ctx.font = "bold 11px sans-serif";
-        ctx.fillText(name.length > 15 ? name.substring(0, 13) + "…" : name, -ctx.measureText(name).width / 2, 0);
+        ctx.fillText(dispName, -ctx.measureText(dispName).width / 2, -4);
+        
+        // Draw Address directly below it
+        ctx.font = "normal 9px sans-serif";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.fillText(dispAddr, -ctx.measureText(dispAddr).width / 2, 8);
+        
         ctx.restore();
       }
 
@@ -231,7 +232,7 @@
     }
 
     function spinWheel() {
-      if (participants.length === 0) return;
+      if (wheelParticipants.length === 0) return;
       document.getElementById("btnSpin").disabled = true;
       spinAngleStart = Math.random() * 10 + 10;
       spinTime = 0;
@@ -251,38 +252,31 @@
       spinTimeout = requestAnimationFrame(rotateWheel);
     }
 
-   // --- UPDATED ROULETTE & WINNER LOGIC ---
-
-    let winnersHistory = []; // Tracks winners and their claim status
-
     function stopRotateWheel() {
       cancelAnimationFrame(spinTimeout);
       const degrees = startAngle * 180 / Math.PI + 90;
       const arcd = arc * 180 / Math.PI;
-      const index = Math.floor((360 - degrees % 360) / arcd) % participants.length;
+      const index = Math.floor((360 - degrees % 360) / arcd) % wheelParticipants.length;
       
-      const winner = participants[index];
+      const winner = wheelParticipants[index];
       announceWinner(winner, index);
       document.getElementById("btnSpin").disabled = false;
     }
 
     function announceWinner(winner, index) {
-      // 1. Trigger celebration
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
 
-      // 2. Remove the winner from the wheel array so they cannot be picked again
-      participants.splice(index, 1);
+      // Splice from wheel array (prevents picking again) but leaves allParticipants untouched for recovery
+      wheelParticipants.splice(index, 1);
       
-      // 3. Update the UI counter and redraw the wheel minus the winner
-      document.getElementById("totalParticipantsBadge").innerText = `${participants.length} Peserta`;
-      if (participants.length > 0) {
+      document.getElementById("totalParticipantsBadge").innerText = `${wheelParticipants.length} Peserta`;
+      if (wheelParticipants.length > 0) {
         drawRouletteWheel();
       } else {
         drawEmptyWheel("Semua Telah Menang!");
       }
 
-      // 4. Add to history array at the very top (unshift) and re-render the list
-      winnersHistory.unshift({ id: winner.id, name: winner.name, claimed: false });
+      winnersHistory.unshift({ id: winner.id, name: winner.name, address: winner.address, claimed: false });
       renderWinnersList();
     }
 
@@ -294,37 +288,33 @@
         return;
       }
 
-      // Rebuild the HTML for the winners list
       list.innerHTML = winnersHistory.map((w, i) => {
         const isLatest = (i === 0);
         
-        // Base styling for the card
         let cardClass = "p-3 border rounded-xl flex items-center justify-between cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ";
         let textClass = "font-bold text-xs ";
         let iconHtml = "";
 
         if (w.claimed) {
-          // CLAIMED STATE: Dimmed out, green border, checkmark icon
           cardClass += "bg-emerald-950/40 border-emerald-800 opacity-60";
           textClass += "text-emerald-500 line-through";
           iconHtml = '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>';
         } else if (isLatest) {
-          // LATEST WINNER STATE: Highly prominent, amber glow, large pulsing icon
           cardClass += "bg-slate-900 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.15)]";
           textClass += "text-amber-300 text-[13px]"; 
           iconHtml = '<i class="fa-solid fa-award text-amber-400 text-2xl animate-pulse"></i>';
         } else {
-          // OLDER UNCLAIMED WINNERS: Standard styling
           cardClass += "bg-slate-900 border-slate-700 hover:border-slate-500";
           textClass += "text-slate-300";
           iconHtml = '<i class="fa-solid fa-gift text-slate-500 text-base"></i>';
         }
 
+        // Added address right next to ID in the UI
         return `
           <div onclick="toggleClaim(${i})" class="${cardClass}" title="Klik untuk tanda/buang tanda ambil hadiah">
             <div>
               <p class="${textClass}">${w.name}</p>
-              <p class="text-[10px] text-slate-500 font-mono mt-0.5">${w.id}</p>
+              <p class="text-[10px] text-slate-500 mt-0.5"><span class="font-mono">${w.id}</span> • ${w.address}</p>
             </div>
             ${iconHtml}
           </div>
@@ -333,7 +323,6 @@
     }
 
     function toggleClaim(index) {
-      // Flips the claimed status between true and false when clicked
       winnersHistory[index].claimed = !winnersHistory[index].claimed;
       renderWinnersList();
     }
@@ -346,7 +335,8 @@
 
     // --- RECOVERY LOGIC ---
     function openRecoveryModal() {
-      if(participants.length === 0) {
+      // Search from ALL participants, not the wheel
+      if(allParticipants.length === 0) {
         alert("Sila buka kunci panel (masukkan PIN) untuk memuat turun senarai data terlebih dahulu.");
         return;
       }
@@ -373,7 +363,8 @@
         return;
       }
       
-      const matches = participants.filter(p => p.name.toLowerCase().includes(query));
+      // Searches against untouched data array
+      const matches = allParticipants.filter(p => p.name.toLowerCase().includes(query));
       
       if (matches.length === 0) {
         resultsContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 italic">Tiada rekod dijumpai.</p>';
@@ -401,14 +392,11 @@
       qrWrap.classList.add('flex');
       
       document.getElementById('recoveryQrName').innerText = decodeURIComponent(encodedName);
-      
       const qrDiv = document.getElementById('recoveryQrcode');
-      qrDiv.innerHTML = ''; // Clear previous QR
+      qrDiv.innerHTML = ''; 
       
-      // Auto-detect the base URL (so it points back to index.html automatically)
       const baseUrl = window.location.href.split('admin.html')[0];
       const transferUrl = `${baseUrl}?importId=${id}&importName=${encodedName}&importRole=${role}`;
-      
       new QRCode(qrDiv, { text: transferUrl, width: 170, height: 170 });
     }
     

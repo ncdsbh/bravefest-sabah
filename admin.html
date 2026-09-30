@@ -22,7 +22,9 @@
         <p class="text-xs text-slate-400 mt-1">Sila masukkan PIN keselamatan untuk memuat turun data.</p>
       </div>
       <input type="password" id="pinInput" class="w-full text-center tracking-widest text-lg font-mono py-2 bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-indigo-500" placeholder="••••••••">
-      <button onclick="verifyPin()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2.5 rounded-xl font-semibold text-xs tracking-wide">Buka Panel</button>
+      <button id="btnAuth" onclick="verifyPin()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition flex items-center justify-center gap-2">
+        Buka Panel
+      </button>
     </div>
   </div>
 
@@ -115,6 +117,13 @@
     function verifyPin() {
       adminPin = document.getElementById("pinInput").value.trim();
       if (!adminPin) return;
+      
+      const btn = document.getElementById("btnAuth");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menyemak PIN...';
+      btn.classList.replace("bg-indigo-600", "bg-indigo-400");
+      btn.classList.replace("hover:bg-indigo-700", "cursor-not-allowed");
+      
       loadParticipants();
     }
 
@@ -125,6 +134,7 @@
 
         if (data.status === "error") {
           alert("PIN Keselamatan Tidak Sah!");
+          resetAuthButton();
           return;
         }
 
@@ -139,7 +149,16 @@
         }
       } catch (e) {
         alert("Gagal menyambung ke pangkalan data Google Sheet.");
+        resetAuthButton();
       }
+    }
+
+    function resetAuthButton() {
+      const btn = document.getElementById("btnAuth");
+      btn.disabled = false;
+      btn.innerHTML = 'Buka Panel';
+      btn.classList.replace("bg-indigo-400", "bg-indigo-600");
+      btn.classList.replace("cursor-not-allowed", "hover:bg-indigo-700");
     }
 
     function drawEmptyWheel(text) {

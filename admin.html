@@ -120,11 +120,25 @@
       
       const btn = document.getElementById("btnAuth");
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menyemak PIN...';
-      btn.classList.replace("bg-indigo-600", "bg-indigo-400");
-      btn.classList.replace("hover:bg-indigo-700", "cursor-not-allowed");
+      // Inject the spinning icon directly before the text
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> Menyemak PIN...';
+      
+      // Change color and cursor to indicate loading state
+      btn.classList.remove("bg-indigo-600", "hover:bg-indigo-700");
+      btn.classList.add("bg-indigo-400", "cursor-wait");
       
       loadParticipants();
+    }
+
+    function resetAuthButton() {
+      const btn = document.getElementById("btnAuth");
+      btn.disabled = false;
+      // Revert to original text without the spinner
+      btn.innerHTML = 'Buka Panel';
+      
+      // Revert colors and cursor
+      btn.classList.remove("bg-indigo-400", "cursor-wait");
+      btn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
     }
 
     async function loadParticipants() {

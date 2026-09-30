@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin & Lucky Draw - Kempen Hentikan Stigma</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -34,6 +35,9 @@
       </div>
       <div class="flex items-center gap-3">
         <span class="text-xs text-slate-400" id="totalParticipantsBadge">0 Peserta</span>
+        <button onclick="openRecoveryModal()" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-1.5 rounded-lg border border-indigo-500 flex items-center gap-1.5 transition text-white shadow-sm">
+          <i class="fa-solid fa-life-ring"></i> Pemulihan Profil
+        </button>
         <button onclick="loadParticipants()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
           <i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula
         </button>
@@ -67,6 +71,29 @@
       </div>
     </div>
   </main>
+
+  <!-- RECOVERY MODAL -->
+  <div id="recoveryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 p-5 rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-base font-bold text-white"><i class="fa-solid fa-magnifying-glass text-indigo-400 mr-2"></i>Cari & Pulih Profil</h2>
+        <button onclick="closeRecoveryModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <input type="text" id="searchInput" onkeyup="searchParticipant()" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 outline-none mb-3" placeholder="Taip nama peserta...">
+      
+      <div id="searchResults" class="flex-1 overflow-y-auto space-y-2 mb-3 pr-1">
+        <!-- Results populated here via JS -->
+      </div>
+
+      <div id="recoveryQrContainer" class="hidden flex-col items-center justify-center p-6 bg-slate-800 rounded-xl border border-slate-700">
+        <p class="text-xs text-slate-300 mb-2">Minta peserta imbas kod QR ini:</p>
+        <p class="text-sm font-bold text-amber-400 mb-4 text-center" id="recoveryQrName"></p>
+        <div id="recoveryQrcode" class="bg-white p-2.5 rounded-xl shadow-lg"></div>
+        <button onclick="hideRecoveryQr()" class="mt-5 text-xs text-slate-400 hover:text-white underline">Kembali ke carian</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycby5JysOKW16jVmcAzkQUAbrEjX9zJON0uCzdMCns95jEyeQn9dXVAFA-I_wtU5G2DurnQ/exec";
@@ -224,6 +251,81 @@
       const ts = (t /= d) * t;
       const tc = ts * t;
       return b + c * (tc + -3 * ts + 3 * t);
+    }
+
+    // --- RECOVERY LOGIC ---
+    function openRecoveryModal() {
+      if(participants.length === 0) {
+        alert("Sila buka kunci panel (masukkan PIN) untuk memuat turun senarai data terlebih dahulu.");
+        return;
+      }
+      const modal = document.getElementById('recoveryModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '';
+      hideRecoveryQr();
+    }
+
+    function closeRecoveryModal() {
+      const modal = document.getElementById('recoveryModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function searchParticipant() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const resultsContainer = document.getElementById('searchResults');
+      
+      if (query.length < 2) {
+        resultsContainer.innerHTML = '';
+        return;
+      }
+      
+      const matches = participants.filter(p => p.name.toLowerCase().includes(query));
+      
+      if (matches.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 italic">Tiada rekod dijumpai.</p>';
+        return;
+      }
+
+      resultsContainer.innerHTML = matches.map(p => `
+        <div class="flex items-center justify-between p-3 bg-slate-800/60 border border-slate-700 rounded-xl hover:border-indigo-500 transition">
+          <div>
+            <p class="text-xs font-bold text-white">${p.name}</p>
+            <p class="text-[10px] text-slate-400 font-mono mt-0.5">${p.id} • ${p.role.toUpperCase()}</p>
+          </div>
+          <button onclick="generateRecoveryQr('${p.id}', '${encodeURIComponent(p.name)}', '${p.role}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1">
+            <i class="fa-solid fa-qrcode"></i> Jana
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function generateRecoveryQr(id, encodedName, role) {
+      document.getElementById('searchResults').classList.add('hidden');
+      document.getElementById('searchInput').classList.add('hidden');
+      const qrWrap = document.getElementById('recoveryQrContainer');
+      qrWrap.classList.remove('hidden');
+      qrWrap.classList.add('flex');
+      
+      document.getElementById('recoveryQrName').innerText = decodeURIComponent(encodedName);
+      
+      const qrDiv = document.getElementById('recoveryQrcode');
+      qrDiv.innerHTML = ''; // Clear previous QR
+      
+      // Auto-detect the base URL (so it points back to index.html automatically)
+      const baseUrl = window.location.href.split('admin.html')[0];
+      const transferUrl = `${baseUrl}?importId=${id}&importName=${encodedName}&importRole=${role}`;
+      
+      new QRCode(qrDiv, { text: transferUrl, width: 170, height: 170 });
+    }
+    
+    function hideRecoveryQr() {
+      document.getElementById('recoveryQrContainer').classList.add('hidden');
+      document.getElementById('recoveryQrContainer').classList.remove('flex');
+      document.getElementById('searchResults').classList.remove('hidden');
+      document.getElementById('searchInput').classList.remove('hidden');
     }
   </script>
 </body>

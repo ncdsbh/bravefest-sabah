@@ -457,9 +457,16 @@
               </div>
               <p class="text-[11px] text-slate-400 font-mono mt-0.5">ID: ${p.id}</p>
             </div>
-            <button onclick="openQrModal('${p.id}', '${encodeURIComponent(p.name)}', '${p.role}')" class="text-slate-500 hover:text-indigo-600 text-xs flex items-center gap-1 p-1.5 rounded-lg border border-slate-200 hover:border-indigo-200">
-              <i class="fa-solid fa-qrcode"></i> <span class="text-[10px]">Pindah</span>
-            </button>
+            
+            <!-- Tindakan Kad: Pindah & Padam -->
+            <div class="flex items-center gap-1.5">
+              <button onclick="openQrModal('${p.id}', '${encodeURIComponent(p.name)}', '${p.role}')" class="text-slate-500 hover:text-indigo-600 text-xs flex items-center gap-1 p-1.5 rounded-lg border border-slate-200 hover:border-indigo-200 transition">
+                <i class="fa-solid fa-qrcode"></i> <span class="text-[10px]">Pindah</span>
+              </button>
+              <button onclick="deleteProfile('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-red-500 p-1.5 rounded-lg border border-slate-200 hover:border-red-200 transition" title="Padam Profil">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Progress Bar -->
@@ -690,6 +697,32 @@ function renderRatingPills() {
       if (confirm("Adakah anda pasti mahu memadamkan SEMUA data daftar tempatan pada peranti ini?")) {
         localStorage.removeItem("khs_profiles");
         location.reload();
+      }
+    }
+
+    function deleteProfile(id, name) {
+      if (confirm(`Adakah anda pasti mahu memadam profil "${name}" dari peranti ini?\n\nNota: Ini hanya memadam paparan di telefon ini. Data pendaftaran di pangkalan data (Google Sheet) kekal selamat.`)) {
+        
+        let profiles = getLocalProfiles();
+        
+        // Tapis keluar ID yang ingin dipadam
+        profiles = profiles.filter(p => p.id !== id);
+        
+        // Simpan semula baki senarai
+        setLocalProfiles(profiles);
+        
+        // Jika semua profil telah dipadam, kembali ke borang pendaftaran
+        if (profiles.length === 0) {
+          document.getElementById("dashboardView").classList.add("hidden");
+          document.getElementById("registrationView").classList.remove("hidden");
+          dependentCount = 0;
+          renderRegistrationForm();
+        } else {
+          // Jika masih ada profil lain, render semula dashboard
+          renderDashboard();
+        }
+        
+        showToast("Profil berjaya dipadam dari peranti.", "success");
       }
     }
   </script>

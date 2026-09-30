@@ -24,19 +24,16 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-xl mx-auto p-4 space-y-6">
 
-    <!-- VIEW 1: REGISTRATION FLOW (Shown if no primary user in localStorage) -->
+    <!-- VIEW 1: REGISTRATION FLOW -->
     <section id="registrationView" class="hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
       <h2 class="text-xl font-bold text-slate-800 mb-1">Pendaftaran Kehadiran</h2>
       <p class="text-xs text-slate-500 mb-4">Daftar untuk diri anda dan tanggungan/ahli keluarga jika ada.</p>
       
       <form id="regForm" class="space-y-4">
-        <!-- Dynamic Profile Fields -->
         <div id="participantFields" class="space-y-4"></div>
-
         <button type="button" id="btnAddDependent" class="w-full py-2.5 border-2 border-dashed border-indigo-300 text-indigo-700 rounded-xl text-sm font-semibold hover:bg-indigo-50 transition flex items-center justify-center gap-2">
           <i class="fa-solid fa-user-plus"></i> Tambah Ahli Keluarga / Tanggungan
         </button>
-
         <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
           <span>Hantar Pendaftaran</span>
           <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -44,7 +41,7 @@
       </form>
     </section>
 
-    <!-- VIEW 2: DASHBOARD CARDS (Shown after registration or via transfer) -->
+    <!-- VIEW 2: DASHBOARD CARDS -->
     <section id="dashboardView" class="hidden space-y-4">
       <div class="flex items-center justify-between mb-2">
         <div>
@@ -52,10 +49,9 @@
           <p class="text-[11px] text-slate-500">Pilih profil untuk melengkapkan tinjauan.</p>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="syncStatus()" class="text-[11px] px-2 py-1.5 bg-indigo-50 text-indigo-700 font-semibold rounded border border-indigo-200 hover:bg-indigo-100 flex items-center gap-1 transition">
+          <button id="btnSync" onclick="syncStatus()" class="text-[11px] px-2 py-1.5 bg-indigo-50 text-indigo-700 font-semibold rounded border border-indigo-200 hover:bg-indigo-100 flex items-center gap-1 transition">
             <i class="fa-solid fa-rotate"></i> Semak Status
           </button>
-          <button onclick="resetDataPrompt()" class="text-xs text-red-500 hover:underline p-1"><i class="fa-solid fa-trash"></i></button>
         </div>
       </div>
 
@@ -84,9 +80,7 @@
         </div>
         <button onclick="closeModal('stig9Modal')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
       </div>
-      <div class="p-4 overflow-y-auto space-y-5 text-sm" id="stigQuestionsContainer">
-        <!-- Rendered via JS -->
-      </div>
+      <div class="p-4 overflow-y-auto space-y-5 text-sm" id="stigQuestionsContainer"></div>
       <div class="p-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50 rounded-b-2xl">
         <button onclick="closeModal('stig9Modal')" class="px-4 py-2 text-xs font-semibold text-slate-600 rounded-lg">Batal</button>
         <button onclick="submitStig9()" class="px-5 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-lg shadow">Hantar STIG-9</button>
@@ -126,12 +120,9 @@
         <div class="space-y-1.5 border-b pb-3">
           <p class="font-semibold text-slate-700">2. Pendedahan Logo Kempen</p>
           <p class="text-xs text-slate-500">Pernahkah anda melihat logo "Hentikan Stigma, Kesihatan Mental Milik Semua"?</p>
-          
-          <!-- Gambar Logo -->
           <div class="flex justify-center my-3">
             <img src="3 HENTIKAN STIGMA.png" alt="Logo Hentikan Stigma" class="h-24 w-auto object-contain rounded drop-shadow-sm">
           </div>
-
           <div class="flex gap-4 pt-1 text-xs">
             <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 cursor-pointer flex-1 justify-center hover:bg-slate-50">
               <input type="radio" name="seenLogo" value="Ya" class="text-indigo-600"> Ya
@@ -145,7 +136,6 @@
         <!-- Question 3: Matrix 1-5 -->
         <div class="space-y-3">
           <p class="font-semibold text-slate-700">3. Persepsi & Kepuasan (1: Lemah &rarr; 5: Cemerlang)</p>
-          
           <div class="space-y-2 text-xs">
             <div>
               <span class="text-slate-600 block mb-1">Menarik Perhatian (Aktiviti/Pameran)</span>
@@ -196,7 +186,6 @@
   </div>
 
   <script>
-    // REPLACE WITH YOUR DEPLOYED APPS SCRIPT WEB APP URL
     const GAS_URL = "https://script.google.com/macros/s/AKfycby5JysOKW16jVmcAzkQUAbrEjX9zJON0uCzdMCns95jEyeQn9dXVAFA-I_wtU5G2DurnQ/exec";
 
     const STIG9_QUESTIONS = [
@@ -228,7 +217,8 @@
             name: decodeURIComponent(importName),
             role: importRole,
             stigDone: false,
-            keberkesananDone: false
+            keberkesananDone: false,
+            checkInDate: new Date().toDateString()
           });
           setLocalProfiles(profiles);
         }
@@ -272,15 +262,15 @@
       const profiles = getLocalProfiles();
       if (profiles.length === 0) return;
       
-      const ids = profiles.map(p => p.id);
-      showLoading("Menyemak status terkini...");
+      const ids = profiles.map(p => p.id).join(",");
+      const btn = document.getElementById("btnSync");
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Semak...';
+      btn.classList.add("opacity-60", "cursor-wait");
       
       try {
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" }, // Wajib guna text/plain
-          body: JSON.stringify({ action: "check_status", ids: ids })
-        });
+        const res = await fetch(`${GAS_URL}?action=check_status&ids=${ids}`);
         const data = await res.json();
         
         if (data.status === "success") {
@@ -296,9 +286,11 @@
           showToast("Status berjaya dikemas kini!", "success");
         }
       } catch (e) {
-        showToast("Gagal menyemak status. Sila semak pautan URL.", "error");
+        showToast("Ralat menyemak status. Sila cuba lagi.", "error");
       } finally {
-        hideLoading();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Semak Status';
+        btn.classList.remove("opacity-60", "cursor-wait");
       }
     }
 
@@ -331,12 +323,10 @@
             <span class="w-5 h-5 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-xs font-bold">${idx + 1}</span>
             <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">${isPrimary ? "Peserta Utama" : "Tanggungan / Ahli Keluarga"}</span>
           </div>
-
           <div>
             <label class="block text-xs font-medium text-slate-600 mb-1">Nama Penuh *</label>
             <input type="text" required name="name_${idx}" class="w-full text-xs p-2.5 border rounded-lg border-slate-300 focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="cth: Ahmad Bin Abdullah">
           </div>
-
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">Jantina *</label>
@@ -351,7 +341,6 @@
               <input type="number" required name="age_${idx}" min="1" max="110" class="w-full text-xs p-2.5 border rounded-lg border-slate-300" placeholder="cth: 34">
             </div>
           </div>
-
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">Status Pekerjaan *</label>
@@ -382,34 +371,19 @@
       const formData = new FormData(e.target);
       const records = [];
       const localProfiles = [];
+      const todayStr = new Date().toDateString();
 
       // Primary
       const pId = "ID-" + Date.now().toString(36) + "-0";
-      records.push({
-        id: pId,
-        name: formData.get("name_0"),
-        gender: formData.get("gender_0"),
-        age: formData.get("age_0"),
-        employment: formData.get("employment_0"),
-        address: formData.get("address_0"),
-        role: "primary"
-      });
-      localProfiles.push({ id: pId, name: formData.get("name_0"), role: "primary", stigDone: false, keberkesananDone: false, checkInDate: new Date().toDateString() });
+      records.push({ id: pId, name: formData.get("name_0"), gender: formData.get("gender_0"), age: formData.get("age_0"), employment: formData.get("employment_0"), address: formData.get("address_0"), role: "primary" });
+      localProfiles.push({ id: pId, name: formData.get("name_0"), role: "primary", stigDone: false, keberkesananDone: false, checkInDate: todayStr });
 
       // Dependents
       for (let i = 1; i <= dependentCount; i++) {
         if (formData.get(`name_${i}`)) {
           const dId = "ID-" + Date.now().toString(36) + "-" + i;
-          records.push({
-            id: dId,
-            name: formData.get(`name_${i}`),
-            gender: formData.get(`gender_${i}`),
-            age: formData.get(`age_${i}`),
-            employment: formData.get(`employment_${i}`),
-            address: formData.get(`address_${i}`),
-            role: "dependent"
-          });
-          localProfiles.push({ id: dId, name: formData.get(`name_${i}`), role: "dependent", stigDone: false, keberkesananDone: false, checkInDate: new Date().toDateString() });
+          records.push({ id: dId, name: formData.get(`name_${i}`), gender: formData.get(`gender_${i}`), age: formData.get(`age_${i}`), employment: formData.get(`employment_${i}`), address: formData.get(`address_${i}`), role: "dependent" });
+          localProfiles.push({ id: dId, name: formData.get(`name_${i}`), role: "dependent", stigDone: false, keberkesananDone: false, checkInDate: todayStr });
         }
       }
 
@@ -440,7 +414,7 @@
       const profiles = getLocalProfiles();
 
       profiles.forEach(p => {
-        let completedSections = 1; // Registration is already done
+        let completedSections = 1; 
         if (p.stigDone) completedSections++;
         if (p.keberkesananDone) completedSections++;
 
@@ -485,7 +459,7 @@
           </div>
 
           ${p.checkInDate !== new Date().toDateString() ? `
-          <!-- Daily Attendance Button (Hanya wujud jika belum hadir hari ini) -->
+          <!-- Daily Attendance Button -->
           <div class="pt-2">
             <button 
               onclick="submitDailyAttendance('${p.id}')" 
@@ -580,7 +554,6 @@
           body: JSON.stringify({ action: "submit_stig9", userId: currentActionUserId, answers: answers })
         });
 
-        // Update local state
         const profiles = getLocalProfiles();
         const p = profiles.find(x => x.id === currentActionUserId);
         if (p) p.stigDone = true;
@@ -597,50 +570,45 @@
     }
 
     // 5. KEBERKESANAN MODAL & SUBMIT
-function renderRatingPills() {
-  const colorMap = {
-    1: { border: "border-red-200", text: "text-red-600", hover: "hover:bg-red-50", activeBg: "bg-red-500", activeBorder: "border-red-500", activeText: "text-white" },
-    2: { border: "border-orange-200", text: "text-orange-600", hover: "hover:bg-orange-50", activeBg: "bg-orange-500", activeBorder: "border-orange-500", activeText: "text-white" },
-    3: { border: "border-amber-300", text: "text-amber-600", hover: "hover:bg-amber-50", activeBg: "bg-amber-500", activeBorder: "border-amber-500", activeText: "text-white" },
-    4: { border: "border-emerald-300", text: "text-emerald-600", hover: "hover:bg-emerald-50", activeBg: "bg-emerald-500", activeBorder: "border-emerald-500", activeText: "text-white" },
-    5: { border: "border-blue-200", text: "text-blue-600", hover: "hover:bg-blue-50", activeBg: "bg-blue-500", activeBorder: "border-blue-500", activeText: "text-white" }
-  };
+    function renderRatingPills() {
+      const colorMap = {
+        1: { border: "border-red-200", text: "text-red-600", hover: "hover:bg-red-50", activeBg: "bg-red-500", activeBorder: "border-red-500", activeText: "text-white" },
+        2: { border: "border-orange-200", text: "text-orange-600", hover: "hover:bg-orange-50", activeBg: "bg-orange-500", activeBorder: "border-orange-500", activeText: "text-white" },
+        3: { border: "border-amber-300", text: "text-amber-600", hover: "hover:bg-amber-50", activeBg: "bg-amber-500", activeBorder: "border-amber-500", activeText: "text-white" },
+        4: { border: "border-emerald-300", text: "text-emerald-600", hover: "hover:bg-emerald-50", activeBg: "bg-emerald-500", activeBorder: "border-emerald-500", activeText: "text-white" },
+        5: { border: "border-blue-200", text: "text-blue-600", hover: "hover:bg-blue-50", activeBg: "bg-blue-500", activeBorder: "border-blue-500", activeText: "text-white" }
+      };
 
-  ["engaging", "understandable", "relevant", "behavioral"].forEach(key => {
-    const container = document.getElementById(`rate-${key}`);
-    if (!container) return;
-    
-    // Generate the pills with their base colors
-    container.innerHTML = [1, 2, 3, 4, 5].map(val => {
-      const c = colorMap[val];
-      return `
-        <label class="pill-label flex-1 text-center py-1.5 border bg-white rounded text-xs cursor-pointer transition-all duration-200 ${c.border} ${c.text} ${c.hover}" data-val="${val}">
-          <input type="radio" name="rate_${key}" value="${val}" required class="sr-only">
-          <span class="rating-num font-semibold">${val}</span>
-        </label>
-      `;
-    }).join('');
-
-    // Visual selection indicator logic
-    container.querySelectorAll('input').forEach(input => {
-      input.addEventListener('change', () => {
+      ["engaging", "understandable", "relevant", "behavioral"].forEach(key => {
+        const container = document.getElementById(`rate-${key}`);
+        if (!container) return;
         
-        // 1. Reset all labels in this specific row back to unselected base state
-        container.querySelectorAll('.pill-label').forEach(label => {
-          const val = label.getAttribute('data-val');
+        container.innerHTML = [1, 2, 3, 4, 5].map(val => {
           const c = colorMap[val];
-          label.className = `pill-label flex-1 text-center py-1.5 border bg-white rounded text-xs cursor-pointer transition-all duration-200 ${c.border} ${c.text} ${c.hover}`;
-        });
+          return `
+            <label class="pill-label flex-1 text-center py-1.5 border bg-white rounded text-xs cursor-pointer transition-all duration-200 ${c.border} ${c.text} ${c.hover}" data-val="${val}">
+              <input type="radio" name="rate_${key}" value="${val}" required class="sr-only">
+              <span class="rating-num font-semibold">${val}</span>
+            </label>
+          `;
+        }).join('');
 
-        // 2. Apply solid active colors to the newly selected label
-        const selectedVal = input.value;
-        const sc = colorMap[selectedVal];
-        const activeLabel = input.parentElement;
-        activeLabel.className = `pill-label flex-1 text-center py-1.5 border rounded text-xs cursor-pointer transition-all duration-200 shadow-sm ${sc.activeBg} ${sc.activeBorder} ${sc.activeText}`;
+        container.querySelectorAll('input').forEach(input => {
+          input.addEventListener('change', () => {
+            container.querySelectorAll('.pill-label').forEach(label => {
+              const val = label.getAttribute('data-val');
+              const c = colorMap[val];
+              label.className = `pill-label flex-1 text-center py-1.5 border bg-white rounded text-xs cursor-pointer transition-all duration-200 ${c.border} ${c.text} ${c.hover}`;
+            });
+
+            const selectedVal = input.value;
+            const sc = colorMap[selectedVal];
+            const activeLabel = input.parentElement;
+            activeLabel.className = `pill-label flex-1 text-center py-1.5 border rounded text-xs cursor-pointer transition-all duration-200 shadow-sm ${sc.activeBg} ${sc.activeBorder} ${sc.activeText}`;
+          });
+        });
       });
-    });
-  });
-}
+    }
 
     function openKeberkesananModal(userId, userName) {
       currentActionUserId = userId;
@@ -730,26 +698,18 @@ function renderRatingPills() {
 
     function deleteProfile(id, name) {
       if (confirm(`Adakah anda pasti mahu memadam profil "${name}" dari peranti ini?\n\nNota: Ini hanya memadam paparan di telefon ini. Data pendaftaran di pangkalan data (Google Sheet) kekal selamat.`)) {
-        
         let profiles = getLocalProfiles();
-        
-        // Tapis keluar ID yang ingin dipadam
         profiles = profiles.filter(p => p.id !== id);
-        
-        // Simpan semula baki senarai
         setLocalProfiles(profiles);
         
-        // Jika semua profil telah dipadam, kembali ke borang pendaftaran
         if (profiles.length === 0) {
           document.getElementById("dashboardView").classList.add("hidden");
           document.getElementById("registrationView").classList.remove("hidden");
           dependentCount = 0;
           renderRegistrationForm();
         } else {
-          // Jika masih ada profil lain, render semula dashboard
           renderDashboard();
         }
-        
         showToast("Profil berjaya dipadam dari peranti.", "success");
       }
     }

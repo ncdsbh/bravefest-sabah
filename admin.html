@@ -121,7 +121,11 @@
 
     async function loadParticipants() {
       try {
-        const res = await fetch(`${GAS_URL}?pin=${encodeURIComponent(adminPin)}`);
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "admin_fetch", pin: adminPin })
+        });
         const data = await res.json();
 
         if (data.status === "error") {
@@ -136,23 +140,23 @@
         const rawAttendance = data.attendance || [];
         const rawWinners = data.winners || [];
         
-        // 1. Find who attended TODAY
+        // 1. Cari yang hadir HARI INI
         const todayStr = new Date().toDateString();
         const todayAttendeeIds = rawAttendance
           .filter(a => new Date(a.time).toDateString() === todayStr)
           .map(a => a.id);
           
-        // 2. Find ALL past and present winners
+        // 2. Senarai pemenang lepas (jangan letak dalam roda)
         const winnerIds = rawWinners.map(w => w.id);
         
-        // 3. Wheel = (Registered && Attended Today) MINUS (Winners)
+        // 3. Masukkan ke dalam roda jika: Hadir Hari Ini & Belum Menang
         wheelParticipants = allParticipants.filter(p => todayAttendeeIds.includes(p.id) && !winnerIds.includes(p.id));
         
-        // 4. Build Winner History UI from DB (Reverse chronologically)
+        // 4. Bina Sejarah Pemenang
         winnersHistory = rawWinners.map(w => {
           const profile = allParticipants.find(p => p.id === w.id);
           return { id: w.id, name: profile ? profile.name : "Unknown", address: profile ? profile.address : "", claimed: true };
-        }).reverse(); // Newest at top
+        }).reverse(); 
 
         document.getElementById("totalParticipantsBadge").innerText = `${wheelParticipants.length} Hadir & Layak`;
 
@@ -162,7 +166,7 @@
         renderWinnersList();
         
       } catch (e) {
-        alert("Gagal menyambung ke pangkalan data.");
+        alert("Ralat 404 / Gagal menyambung ke pangkalan data.");
         resetAuthButton();
       }
     }

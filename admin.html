@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- ADMIN AUTH MODAL (Blocks view until valid PIN is provided) -->
+  <!-- ADMIN AUTH MODAL -->
   <div id="authOverlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xs w-full shadow-2xl text-center space-y-4">
       <div class="w-12 h-12 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto text-xl">
@@ -40,7 +40,7 @@
         <button onclick="openRecoveryModal()" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-1.5 rounded-lg border border-indigo-500 flex items-center gap-1.5 transition text-white shadow-sm">
           <i class="fa-solid fa-life-ring"></i> Pemulihan Profil
         </button>
-        <button onclick="loadParticipants()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+        <button id="btnRefresh" onclick="loadParticipants(true)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
           <i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula
         </button>
       </div>
@@ -51,13 +51,10 @@
     
     <!-- WHEEL DISPLAY -->
     <div class="flex flex-col items-center justify-center relative">
-      <!-- Arrow Pointer -->
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-amber-400 text-2xl drop-shadow-md">
         <i class="fa-solid fa-location-pin"></i>
       </div>
-      
       <canvas id="wheelCanvas" width="380" height="380" class="rounded-full shadow-2xl border-4 border-slate-800 bg-slate-950"></canvas>
-      
       <button id="btnSpin" onclick="spinWheel()" class="mt-6 px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-full shadow-lg transition transform active:scale-95 text-sm uppercase tracking-wider flex items-center gap-2">
         <i class="fa-solid fa-play"></i> Putar Roda
       </button>
@@ -81,13 +78,8 @@
         <h2 class="text-base font-bold text-white"><i class="fa-solid fa-magnifying-glass text-indigo-400 mr-2"></i>Cari & Pulih Profil</h2>
         <button onclick="closeRecoveryModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      
       <input type="text" id="searchInput" onkeyup="searchParticipant()" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 outline-none mb-3" placeholder="Taip nama peserta...">
-      
-      <div id="searchResults" class="flex-1 overflow-y-auto space-y-2 mb-3 pr-1">
-        <!-- Results populated here via JS -->
-      </div>
-
+      <div id="searchResults" class="flex-1 overflow-y-auto space-y-2 mb-3 pr-1"></div>
       <div id="recoveryQrContainer" class="hidden flex-col items-center justify-center p-6 bg-slate-800 rounded-xl border border-slate-700">
         <p class="text-xs text-slate-300 mb-2">Minta peserta imbas kod QR ini:</p>
         <p class="text-sm font-bold text-amber-400 mb-4 text-center" id="recoveryQrName"></p>
@@ -99,8 +91,8 @@
 
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycby5JysOKW16jVmcAzkQUAbrEjX9zJON0uCzdMCns95jEyeQn9dXVAFA-I_wtU5G2DurnQ/exec";
-    let adminPin = "";
     
+    let adminPin = "";
     let allParticipants = []; 
     let wheelParticipants = []; 
     let winnersHistory = [];
@@ -119,18 +111,21 @@
       loadParticipants();
     }
 
-    async function loadParticipants() {
+    async function loadParticipants(isRefresh = false) {
+      let refreshBtn;
+      if (isRefresh) {
+        refreshBtn = document.getElementById("btnRefresh");
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> Menyemak...';
+      }
+
       try {
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "admin_fetch", pin: adminPin })
-        });
+        const res = await fetch(`${GAS_URL}?action=admin_fetch&pin=${encodeURIComponent(adminPin)}`);
         const data = await res.json();
 
         if (data.status === "error") {
           alert("PIN Keselamatan Tidak Sah!");
-          resetAuthButton();
+          if (!isRefresh) resetAuthButton();
           return;
         }
 
@@ -140,19 +135,15 @@
         const rawAttendance = data.attendance || [];
         const rawWinners = data.winners || [];
         
-        // 1. Cari yang hadir HARI INI
         const todayStr = new Date().toDateString();
         const todayAttendeeIds = rawAttendance
           .filter(a => new Date(a.time).toDateString() === todayStr)
           .map(a => a.id);
           
-        // 2. Senarai pemenang lepas (jangan letak dalam roda)
         const winnerIds = rawWinners.map(w => w.id);
         
-        // 3. Masukkan ke dalam roda jika: Hadir Hari Ini & Belum Menang
         wheelParticipants = allParticipants.filter(p => todayAttendeeIds.includes(p.id) && !winnerIds.includes(p.id));
         
-        // 4. Bina Sejarah Pemenang
         winnersHistory = rawWinners.map(w => {
           const profile = allParticipants.find(p => p.id === w.id);
           return { id: w.id, name: profile ? profile.name : "Unknown", address: profile ? profile.address : "", claimed: true };
@@ -166,8 +157,13 @@
         renderWinnersList();
         
       } catch (e) {
-        alert("Ralat 404 / Gagal menyambung ke pangkalan data.");
-        resetAuthButton();
+        alert("Gagal menyambung ke pangkalan data.");
+        if (!isRefresh) resetAuthButton();
+      } finally {
+        if (isRefresh) {
+          refreshBtn.disabled = false;
+          refreshBtn.innerHTML = '<i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula';
+        }
       }
     }
 
@@ -245,7 +241,6 @@
     function announceWinner(winner, index) {
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
 
-      // Post winner to Google Sheets to permanently omit them across refreshes/days
       fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "submit_winner", userId: winner.id }) });
 
       wheelParticipants.splice(index, 1);
@@ -289,7 +284,7 @@
     function toggleClaim(index) { winnersHistory[index].claimed = !winnersHistory[index].claimed; renderWinnersList(); }
     function easeOut(t, b, c, d) { const ts = (t /= d) * t, tc = ts * t; return b + c * (tc + -3 * ts + 3 * t); }
 
-    // --- RECOVERY LOGIC (Unchanged, always uses allParticipants) ---
+    // --- RECOVERY LOGIC ---
     function openRecoveryModal() {
       if(allParticipants.length === 0) { alert("Sila buka panel dahulu."); return; }
       document.getElementById('recoveryModal').classList.replace('hidden', 'flex');

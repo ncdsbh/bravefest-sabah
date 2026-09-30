@@ -259,7 +259,7 @@
     }
 
     async function syncStatus() {
-      const profiles = getLocalProfiles();
+      let profiles = getLocalProfiles();
       if (profiles.length === 0) return;
       
       const ids = profiles.map(p => p.id).join(",");
@@ -274,26 +274,51 @@
         const data = await res.json();
         
         if (data.status === "success") {
-          data.results.forEach(resItem => {
-            const p = profiles.find(x => x.id === resItem.id);
-            if (p) {
+          let invalidCount = 0;
+
+          // Tapis dan kemas kini profil berdasarkan data dari pelayan
+          profiles = profiles.filter(p => {
+            const resItem = data.results.find(x => x.id === p.id);
+            if (resItem) {
+              // Jika ID dipadam oleh admin di backend, buang dari storan telefon
+              if (!resItem.isRegistered) {
+                invalidCount++;
+                return false; 
+              }
+              
+              // Jika ID masih sah, kemas kini status borang dan kehadiran
               p.stigDone = resItem.stigDone;
               p.keberkesananDone = resItem.keberkesananDone;
               
-              // Kemas kini butang kehadiran berdasarkan rekod rasmi Google Sheet
               if (resItem.attendedToday) {
                 p.checkInDate = new Date().toDateString();
               } else {
-                // Jika tiada rekod hari ini di DB (cth: dipadam/ditukar ke kelmarin), butang akan muncul semula
-                if (p.checkInDate === new Date().toDateString()) {
-                  p.checkInDate = null; 
-                }
+                if (p.checkInDate === new Date().toDateString()) p.checkInDate = null; 
               }
+              return true; // Kekalkan profil ini
             }
+            return true;
           });
+
+          // Simpan senarai profil yang telah ditapis
           setLocalProfiles(profiles);
-          renderDashboard();
-          showToast("Status berjaya dikemas kini!", "success");
+
+          // Jika semua profil dipadam dari pelayan, hantar kembali ke paparan pendaftaran
+          if (profiles.length === 0) {
+            document.getElementById("dashboardView").classList.add("hidden");
+            document.getElementById("registrationView").classList.remove("hidden");
+            dependentCount = 0;
+            renderRegistrationForm();
+            showToast("Rekod anda telah dikosongkan. Sila daftar semula.", "error");
+          } else {
+            // Render semula profil yang berbaki
+            renderDashboard();
+            if (invalidCount > 0) {
+              showToast(`Dikemas kini. ${invalidCount} rekod usang telah dipadam.`, "info");
+            } else {
+              showToast("Status berjaya dikemas kini!", "success");
+            }
+          }
         }
       } catch (e) {
         showToast("Ralat menyemak status. Sila cuba lagi.", "error");

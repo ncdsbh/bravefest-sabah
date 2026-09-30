@@ -272,15 +272,18 @@
       const profiles = getLocalProfiles();
       if (profiles.length === 0) return;
       
-      const ids = profiles.map(p => p.id).join(",");
+      const ids = profiles.map(p => p.id);
       showLoading("Menyemak status terkini...");
       
       try {
-        const res = await fetch(`${GAS_URL}?action=check_status&ids=${ids}`);
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, // Wajib guna text/plain
+          body: JSON.stringify({ action: "check_status", ids: ids })
+        });
         const data = await res.json();
         
         if (data.status === "success") {
-          // Merge fetched database status with local profiles
           data.results.forEach(resItem => {
             const p = profiles.find(x => x.id === resItem.id);
             if (p) {
@@ -293,7 +296,7 @@
           showToast("Status berjaya dikemas kini!", "success");
         }
       } catch (e) {
-        showToast("Gagal menyemak status rangkaian.", "error");
+        showToast("Gagal menyemak status. Sila semak pautan URL.", "error");
       } finally {
         hideLoading();
       }

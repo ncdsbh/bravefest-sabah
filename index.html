@@ -110,11 +110,17 @@
         <div class="space-y-1.5 border-b pb-3">
           <p class="font-semibold text-slate-700">2. Pendedahan Logo Kempen</p>
           <p class="text-xs text-slate-500">Pernahkah anda melihat logo "Hentikan Stigma, Kesihatan Mental Milik Semua"?</p>
+          
+          <!-- Gambar Logo -->
+          <div class="flex justify-center my-3">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT80S74FFRbDjMEn9re8XcE4_SZKwfwzYCOa1Tm911gzNqS7kdEga7TZwZ0&s=10" alt="Logo Hentikan Stigma" class="h-24 w-auto object-contain rounded drop-shadow-sm">
+          </div>
+
           <div class="flex gap-4 pt-1 text-xs">
-            <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 cursor-pointer flex-1 justify-center">
+            <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 cursor-pointer flex-1 justify-center hover:bg-slate-50">
               <input type="radio" name="seenLogo" value="Ya" class="text-indigo-600"> Ya
             </label>
-            <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 cursor-pointer flex-1 justify-center">
+            <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 cursor-pointer flex-1 justify-center hover:bg-slate-50">
               <input type="radio" name="seenLogo" value="Tidak" class="text-indigo-600"> Tidak
             </label>
           </div>
@@ -305,7 +311,7 @@
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">Alamat Ringkas *</label>
-              <input type="text" required name="address_${idx}" class="w-full text-xs p-2.5 border rounded-lg border-slate-300" placeholder="cth: Petaling Jaya">
+              <input type="text" required name="address_${idx}" class="w-full text-xs p-2.5 border rounded-lg border-slate-300" placeholder="cth: Penampang">
             </div>
           </div>
         </div>
@@ -440,13 +446,13 @@
       const container = document.getElementById("stigQuestionsContainer");
       container.innerHTML = "";
 
-      const scaleLabels = ["Tidak Setuju", "Agak T. Setuju", "Agak Setuju", "Setuju"];
+      const scaleLabels = ["Tidak Setuju", "Agk. Tdk. Setuju", "Agak Setuju", "Setuju"];
 
       STIG9_QUESTIONS.forEach((q, idx) => {
         const item = document.createElement("div");
         item.className = "space-y-1.5 border-b border-slate-100 pb-3";
         item.innerHTML = `
-          <p class="text-xs font-medium text-slate-700"><span class="font-bold">${idx + 1}.</span> "Saya rasa kebanyakan orang... ${q}"</p>
+          <p class="text-xs font-medium text-slate-700"><span class="font-bold">${idx + 1}.</span> "Saya rasa kebanyakan orang ${q}"</p>
           <div class="grid grid-cols-4 gap-1 pt-1">
             ${scaleLabels.map((lbl, sIdx) => `
               <label class="text-center p-1.5 border border-slate-200 rounded text-[11px] cursor-pointer hover:bg-slate-50 flex flex-col items-center">
@@ -499,26 +505,50 @@
     }
 
     // 5. KEBERKESANAN MODAL & SUBMIT
-    function renderRatingPills() {
-      ["engaging", "understandable", "relevant", "behavioral"].forEach(key => {
-        const container = document.getElementById(`rate-${key}`);
-        if (!container) return;
-        container.innerHTML = [1, 2, 3, 4, 5].map(val => `
-          <label class="flex-1 text-center py-1.5 border border-slate-200 rounded text-xs cursor-pointer hover:bg-slate-50">
-            <input type="radio" name="rate_${key}" value="${val}" required class="sr-only">
-            <span class="rating-num font-semibold text-slate-600">${val}</span>
-          </label>
-        `).join('');
+function renderRatingPills() {
+  const colorMap = {
+    1: { border: "border-red-200", text: "text-red-600", hover: "hover:bg-red-50", activeBg: "bg-red-500", activeBorder: "border-red-500", activeText: "text-white" },
+    2: { border: "border-orange-200", text: "text-orange-600", hover: "hover:bg-orange-50", activeBg: "bg-orange-500", activeBorder: "border-orange-500", activeText: "text-white" },
+    3: { border: "border-amber-300", text: "text-amber-600", hover: "hover:bg-amber-50", activeBg: "bg-amber-500", activeBorder: "border-amber-500", activeText: "text-white" },
+    4: { border: "border-emerald-300", text: "text-emerald-600", hover: "hover:bg-emerald-50", activeBg: "bg-emerald-500", activeBorder: "border-emerald-500", activeText: "text-white" },
+    5: { border: "border-blue-200", text: "text-blue-600", hover: "hover:bg-blue-50", activeBg: "bg-blue-500", activeBorder: "border-blue-500", activeText: "text-white" }
+  };
 
-        // Visual selection indicator
-        container.querySelectorAll('input').forEach(input => {
-          input.addEventListener('change', () => {
-            container.querySelectorAll('label').forEach(l => l.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600'));
-            input.parentElement.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
-          });
+  ["engaging", "understandable", "relevant", "behavioral"].forEach(key => {
+    const container = document.getElementById(`rate-${key}`);
+    if (!container) return;
+    
+    // Generate the pills with their base colors
+    container.innerHTML = [1, 2, 3, 4, 5].map(val => {
+      const c = colorMap[val];
+      return `
+        <label class="pill-label flex-1 text-center py-1.5 border bg-white rounded text-xs cursor-pointer transition-all duration-200 ${c.border} ${c.text} ${c.hover}" data-val="${val}">
+          <input type="radio" name="rate_${key}" value="${val}" required class="sr-only">
+          <span class="rating-num font-semibold">${val}</span>
+        </label>
+      `;
+    }).join('');
+
+    // Visual selection indicator logic
+    container.querySelectorAll('input').forEach(input => {
+      input.addEventListener('change', () => {
+        
+        // 1. Reset all labels in this specific row back to unselected base state
+        container.querySelectorAll('.pill-label').forEach(label => {
+          const val = label.getAttribute('data-val');
+          const c = colorMap[val];
+          label.className = `pill-label flex-1 text-center py-1.5 border bg-white rounded text-xs cursor-pointer transition-all duration-200 ${c.border} ${c.text} ${c.hover}`;
         });
+
+        // 2. Apply solid active colors to the newly selected label
+        const selectedVal = input.value;
+        const sc = colorMap[selectedVal];
+        const activeLabel = input.parentElement;
+        activeLabel.className = `pill-label flex-1 text-center py-1.5 border rounded text-xs cursor-pointer transition-all duration-200 shadow-sm ${sc.activeBg} ${sc.activeBorder} ${sc.activeText}`;
       });
-    }
+    });
+  });
+}
 
     function openKeberkesananModal(userId, userName) {
       currentActionUserId = userId;

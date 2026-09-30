@@ -261,6 +261,23 @@
       document.getElementById("registrationView").classList.remove("hidden");
       dependentCount = 0;
       renderRegistrationForm();
+      
+      // Semak jika ada profil. Jika ada, tunjukkan butang Batal. Jika tiada, paksa daftar.
+      const btnCancel = document.getElementById("btnCancelReg");
+      if (getLocalProfiles().length > 0) {
+        btnCancel.classList.remove("hidden");
+      } else {
+        btnCancel.classList.add("hidden");
+      }
+    }
+
+    function cancelRegistration() {
+      // Kosongkan sebarang input yang mungkin telah ditaip
+      document.getElementById("regForm").reset();
+      
+      // Sembunyikan borang dan buka semula dashboard
+      document.getElementById("registrationView").classList.add("hidden");
+      document.getElementById("dashboardView").classList.remove("hidden");
     }
 
     async function syncStatus() {

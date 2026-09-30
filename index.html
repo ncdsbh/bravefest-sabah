@@ -279,6 +279,16 @@
             if (p) {
               p.stigDone = resItem.stigDone;
               p.keberkesananDone = resItem.keberkesananDone;
+              
+              // Kemas kini butang kehadiran berdasarkan rekod rasmi Google Sheet
+              if (resItem.attendedToday) {
+                p.checkInDate = new Date().toDateString();
+              } else {
+                // Jika tiada rekod hari ini di DB (cth: dipadam/ditukar ke kelmarin), butang akan muncul semula
+                if (p.checkInDate === new Date().toDateString()) {
+                  p.checkInDate = null; 
+                }
+              }
             }
           });
           setLocalProfiles(profiles);

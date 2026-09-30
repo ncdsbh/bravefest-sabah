@@ -261,6 +261,44 @@
       }
     }
 
+    function showRegistrationView() {
+      document.getElementById("dashboardView").classList.add("hidden");
+      document.getElementById("registrationView").classList.remove("hidden");
+      dependentCount = 0;
+      renderRegistrationForm();
+    }
+
+    async function syncStatus() {
+      const profiles = getLocalProfiles();
+      if (profiles.length === 0) return;
+      
+      const ids = profiles.map(p => p.id).join(",");
+      showLoading("Menyemak status terkini...");
+      
+      try {
+        const res = await fetch(`${GAS_URL}?action=check_status&ids=${ids}`);
+        const data = await res.json();
+        
+        if (data.status === "success") {
+          // Merge fetched database status with local profiles
+          data.results.forEach(resItem => {
+            const p = profiles.find(x => x.id === resItem.id);
+            if (p) {
+              p.stigDone = resItem.stigDone;
+              p.keberkesananDone = resItem.keberkesananDone;
+            }
+          });
+          setLocalProfiles(profiles);
+          renderDashboard();
+          showToast("Status berjaya dikemas kini!", "success");
+        }
+      } catch (e) {
+        showToast("Gagal menyemak status rangkaian.", "error");
+      } finally {
+        hideLoading();
+      }
+    }
+
     // 2. REGISTRATION FORM LOGIC
     let dependentCount = 0;
     function renderRegistrationForm() {
@@ -379,7 +417,10 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "register_batch", records: records })
         });
-        setLocalProfiles(localProfiles);
+        const existingProfiles = getLocalProfiles();
+        const updatedProfiles = [...existingProfiles, ...localProfiles];
+        setLocalProfiles(updatedProfiles);
+        e.target.reset();
         hideLoading();
         showToast("Pendaftaran berjaya disimpan!", "success");
         initView();

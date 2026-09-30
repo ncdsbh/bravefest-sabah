@@ -302,11 +302,22 @@
 
       resultsContainer.innerHTML = matches.map(p => `
         <div class="flex items-center justify-between p-3 bg-slate-800/60 border border-slate-700 rounded-xl hover:border-indigo-500 transition">
-          <div>
+          <div class="flex-1 pr-2">
             <p class="text-xs font-bold text-white">${p.name}</p>
             <p class="text-[10px] text-slate-400 font-mono mt-0.5">${p.id} • ${p.role.toUpperCase()}</p>
+            
+            <!-- Lencana Status Tinjauan -->
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              <span class="text-[9px] px-1.5 py-0.5 rounded border ${p.stigDone ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800' : 'bg-slate-800 text-slate-500 border-slate-700'}">
+                <i class="fa-solid ${p.stigDone ? 'fa-check' : 'fa-xmark'}"></i> STIG-9
+              </span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded border ${p.kebDone ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800' : 'bg-slate-800 text-slate-500 border-slate-700'}">
+                <i class="fa-solid ${p.kebDone ? 'fa-check' : 'fa-xmark'}"></i> Keberkesanan
+              </span>
+            </div>
           </div>
-          <button onclick="generateRecoveryQr('${p.id}', '${encodeURIComponent(p.name)}', '${p.role}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1">
+          
+          <button onclick="generateRecoveryQr('${p.id}', '${encodeURIComponent(p.name)}', '${p.role}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-md flex items-center gap-1 shrink-0">
             <i class="fa-solid fa-qrcode"></i> Jana
           </button>
         </div>

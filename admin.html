@@ -43,6 +43,10 @@
         <button id="btnRefresh" onclick="loadParticipants(true)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
           <i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula
         </button>
+        <!-- Butang Log Keluar Baru -->
+        <button onclick="logoutAdmin()" class="bg-red-900/40 hover:bg-red-800/80 text-xs px-3 py-1.5 rounded-lg border border-red-800/50 flex items-center gap-1.5 transition text-red-300">
+          <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
       </div>
     </div>
   </header>
@@ -100,6 +104,26 @@
     let startAngle = 0, arc = 0, spinTimeout = null, spinAngleStart = 10, spinTime = 0, spinTimeTotal = 0, ctx;
     const colors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#06b6d4", "#84cc16"];
 
+    // --- SEMAK MEMORI SESI (SESSION STORAGE) ---
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedPin = sessionStorage.getItem("khs_admin_pin");
+      if (savedPin) {
+        adminPin = savedPin;
+        document.getElementById("pinInput").value = savedPin;
+        document.getElementById("authOverlay").classList.add("hidden");
+        loadParticipants(true); // Tarik data terus di latar belakang
+      }
+    });
+
+    // --- FUNGSI LOG KELUAR ---
+    function logoutAdmin() {
+      sessionStorage.removeItem("khs_admin_pin");
+      adminPin = "";
+      document.getElementById("pinInput").value = "";
+      document.getElementById("authOverlay").classList.remove("hidden");
+      resetAuthButton();
+    }
+
     function verifyPin() {
       adminPin = document.getElementById("pinInput").value.trim();
       if (!adminPin) return;
@@ -124,10 +148,19 @@
         const data = await res.json();
 
         if (data.status === "error") {
-          alert("PIN Keselamatan Tidak Sah!");
+          alert("PIN Keselamatan Tidak Sah atau Telah Diubah!");
+          sessionStorage.removeItem("khs_admin_pin"); // Padam memori jika salah
+          document.getElementById("authOverlay").classList.remove("hidden");
           if (!isRefresh) resetAuthButton();
           return;
         }
+
+        // SIMPAN PIN KE DALAM MEMORI JIKA BERJAYA
+        sessionStorage.setItem("khs_admin_pin", adminPin);
+
+        document.getElementById("authOverlay").classList.add("hidden");
+        
+        allParticipants = data.participants || [];
 
         document.getElementById("authOverlay").classList.add("hidden");
         

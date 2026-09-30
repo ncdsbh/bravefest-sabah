@@ -533,7 +533,7 @@
               ${p.stigDone ? '<i class="fa-solid fa-check"></i> STIG-9' : 'Jawab STIG-9'}
             </button>
             <button onclick="openKeberkesananModal('${p.id}', '${p.name.replace(/'/g, "\\'")}')" ${p.keberkesananDone ? 'disabled' : ''} class="py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 ${p.keberkesananDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-not-allowed' : (isPrimary ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700')}">
-              ${p.keberkesananDone ? '<i class="fa-solid fa-check"></i> Maklum Balas' : 'Keberkesanan'}
+              ${p.keberkesananDone ? '<i class="fa-solid fa-check"></i> Maklum Balas' : 'Penilaian'}
             </button>
           </div>
 

@@ -510,9 +510,18 @@
               ${p.stigDone ? '<i class="fa-solid fa-check"></i> STIG-9' : 'Jawab STIG-9'}
             </button>
             <button onclick="openKeberkesananModal('${p.id}', '${p.name.replace(/'/g, "\\'")}')" ${p.keberkesananDone ? 'disabled' : ''} class="py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 ${p.keberkesananDone ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-not-allowed' : (isPrimary ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700')}">
-              ${p.keberkesananDone ? '<i class="fa-solid fa-check"></i> Maklum Balas' : 'Penilaian'}
+              ${p.keberkesananDone ? '<i class="fa-solid fa-check"></i> Maklum Balas' : 'Keberkesanan'}
             </button>
           </div>
+
+          ${p.stigDone && p.keberkesananDone ? `
+          <!-- Sijil Button (Hanya wujud jika kedua-dua tinjauan selesai) -->
+          <div class="pt-2 mt-1">
+            <button onclick="downloadCert('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="w-full py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 shadow-md">
+              <i class="fa-solid fa-award text-sm"></i> Muat Turun Sijil Penyertaan
+            </button>
+          </div>
+          ` : ''}
         `;
         container.appendChild(card);
       });
@@ -537,6 +546,37 @@
       } catch (err) {
         hideLoading();
         showToast("Ralat. Sila pastikan talian internet stabil.", "error");
+      }
+    }
+
+    async function downloadCert(userId, userName) {
+      showLoading("Menjana sijil... Sila tunggu sebentar (10-15 saat).");
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "generate_cert", id: userId, name: userName })
+        });
+        
+        const data = await res.json();
+        
+        if (data.status === "success") {
+          // Tukar fail Base64 menjadi PDF dan muat turun ke telefon
+          const link = document.createElement('a');
+          link.href = `data:application/pdf;base64,${data.pdfBase64}`;
+          link.download = data.filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          showToast("Sijil berjaya dimuat turun!", "success");
+        } else {
+          showToast("Ralat pelayan: " + data.message, "error");
+        }
+      } catch (err) {
+        showToast("Gagal menjana sijil. Sila semak sambungan internet.", "error");
+      } finally {
+        hideLoading();
       }
     }
 

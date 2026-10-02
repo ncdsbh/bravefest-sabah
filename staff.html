@@ -37,6 +37,10 @@
             <label class="block text-xs font-medium text-slate-600 mb-1">Nama Penuh *</label>
             <input type="text" required name="name" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300 focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="cth: Ahmad Bin Abdullah">
           </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">E-mel Kakitangan *</label>
+            <input type="email" required name="email" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300 focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="cth: nama@moh.gov.my">
+          </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-xs font-medium text-slate-600 mb-1">Jantina *</label>
@@ -382,6 +386,7 @@
       records.push({ 
         id: pId, 
         name: formData.get("name"), 
+        email: formData.get("email"), // CAPTURE EMAIL
         gender: formData.get("gender"), 
         age: formData.get("age"), 
         employment: formData.get("employment"), 

@@ -326,28 +326,47 @@
       ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, 380, 380);
 
-      const outsideRadius = 180, textRadius = 115, insideRadius = 40;
-      arc = Math.PI * 2 / wheelParticipants.length;
-
-      for (let i = 0; i < wheelParticipants.length; i++) {
-        const angle = startAngle + i * arc;
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.beginPath(); ctx.arc(190, 190, outsideRadius, angle, angle + arc, false); ctx.arc(190, 190, insideRadius, angle + arc, angle, true); ctx.fill();
-
-        ctx.save();
-        ctx.fillStyle = "#ffffff";
-        ctx.translate(190 + Math.cos(angle + arc / 2) * textRadius, 190 + Math.sin(angle + arc / 2) * textRadius);
-        ctx.rotate(angle + arc / 2 + Math.PI);
+      // 1. JIKA TIADA CACHE, KITA LUKIS RODA SEKALI SAHAJA (DI LATAR BELAKANG)
+      if (!wheelCacheCanvas) {
+        wheelCacheCanvas = document.createElement("canvas");
+        wheelCacheCanvas.width = 380;
+        wheelCacheCanvas.height = 380;
+        const wCtx = wheelCacheCanvas.getContext("2d");
         
-        const p = wheelParticipants[i];
-        const dispName = p.name.length > 15 ? p.name.substring(0, 13) + "…" : p.name;
-        const dispAddr = p.address.length > 15 ? p.address.substring(0, 13) + "…" : p.address;
+        const outsideRadius = 180, textRadius = 115, insideRadius = 40;
+        arc = Math.PI * 2 / wheelParticipants.length;
 
-        ctx.font = "bold 11px sans-serif"; ctx.fillText(dispName, -ctx.measureText(dispName).width / 2, -4);
-        ctx.font = "normal 9px sans-serif"; ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fillText(dispAddr, -ctx.measureText(dispAddr).width / 2, 8);
-        ctx.restore();
+        for (let i = 0; i < wheelParticipants.length; i++) {
+          const angle = i * arc; // Lukis pada sudut statik (0)
+          
+          wCtx.fillStyle = colors[i % colors.length];
+          wCtx.beginPath(); 
+          wCtx.arc(190, 190, outsideRadius, angle, angle + arc, false); 
+          wCtx.arc(190, 190, insideRadius, angle + arc, angle, true); 
+          wCtx.fill();
+
+          wCtx.save();
+          wCtx.fillStyle = "#ffffff";
+          wCtx.translate(190 + Math.cos(angle + arc / 2) * textRadius, 190 + Math.sin(angle + arc / 2) * textRadius);
+          wCtx.rotate(angle + arc / 2 + Math.PI);
+          
+          const p = wheelParticipants[i];
+          const dispName = p.name.length > 15 ? p.name.substring(0, 13) + "…" : p.name;
+          const dispAddr = p.address.length > 15 ? p.address.substring(0, 13) + "…" : p.address;
+
+          wCtx.font = "bold 11px sans-serif"; wCtx.fillText(dispName, -wCtx.measureText(dispName).width / 2, -4);
+          wCtx.font = "normal 9px sans-serif"; wCtx.fillStyle = "rgba(255,255,255,0.7)"; wCtx.fillText(dispAddr, -wCtx.measureText(dispAddr).width / 2, 8);
+          wCtx.restore();
+        }
+        wCtx.fillStyle = "#0f172a"; wCtx.beginPath(); wCtx.arc(190, 190, insideRadius - 5, 0, Math.PI * 2, true); wCtx.fill();
       }
-      ctx.fillStyle = "#0f172a"; ctx.beginPath(); ctx.arc(190, 190, insideRadius - 5, 0, Math.PI * 2, true); ctx.fill();
+
+      // 2. PUTAR IMEJ (Bukan lukis semula 200 rekod) - Sangat Laju!
+      ctx.save();
+      ctx.translate(190, 190);
+      ctx.rotate(startAngle); // Gunakan startAngle di sini sahaja
+      ctx.drawImage(wheelCacheCanvas, -190, -190);
+      ctx.restore();
     }
 
     function handleSpinClick() {

@@ -304,7 +304,8 @@
         updateStatsDashboard();
         
       } catch (e) {
-        alert("Gagal menyambung ke pangkalan data.");
+        console.error("Ralat Penuh:", e); // Tunjuk di log browser
+        alert("Gagal menyambung ke pangkalan data.\nRalat: " + e.message);
         if (!isRefresh) resetAuthButton();
       } finally {
         if (isRefresh) {

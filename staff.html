@@ -524,6 +524,17 @@
       }
     }
 
+    // Helper function to convert Base64 to a Blob (Fixes iOS/iPhone issues)
+    function base64ToBlob(base64, mimeType) {
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      return new Blob([byteArray], { type: mimeType });
+    }
+
     async function downloadCert(userId, userName, userRole) {
       showLoading("Menjana sijil... Sila tunggu sebentar (10-15 saat).");
       try {
@@ -536,14 +547,25 @@
         const data = await res.json();
         
         if (data.status === "success") {
+          // Convert Base64 to Blob for iOS compatibility
+          const blob = base64ToBlob(data.pdfBase64, 'application/pdf');
+          const blobUrl = URL.createObjectURL(blob);
+          
           const link = document.createElement('a');
-          link.href = `data:application/pdf;base64,${data.pdfBase64}`;
+          link.href = blobUrl;
           link.download = data.filename;
+          
+          // iOS Safari fallback: Opens in native viewer where they can "Save to Files"
+          link.target = "_blank"; 
+          
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           
-          showToast("Sijil berjaya dimuat turun!", "success");
+          // Clean up the temporary URL to save memory
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          
+          showToast("Sijil berjaya dijana!", "success");
         } else {
           showToast("Ralat pelayan: " + data.message, "error");
         }

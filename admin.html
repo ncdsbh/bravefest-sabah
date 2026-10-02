@@ -318,10 +318,6 @@
       if (wheelParticipants.length === 0 || isSpinning) return;
       const btn = document.getElementById("btnSpin");
 
-      function handleSpinClick() {
-      if (wheelParticipants.length === 0 || isSpinning) return;
-      const btn = document.getElementById("btnSpin");
-
       // 1. If clicked while waiting, CANCEL the spin
       if (pendingSpinTimeout) {
         clearTimeout(pendingSpinTimeout);
@@ -364,7 +360,7 @@
         rotateWheel();
       }, 3000); // Pastikan masa ini sama dengan nilai timeLeft (3000 = 3s)
     }
-
+    
     // Replace your old stopRotateWheel() function with this
     function stopRotateWheel() {
       cancelAnimationFrame(spinTimeout);

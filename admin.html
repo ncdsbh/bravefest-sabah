@@ -53,11 +53,20 @@
 
   <main class="max-w-6xl mx-auto p-4 flex-1 flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-6 w-full">
     
-    <!-- 1. STATS BOARD (NEW) -->
+    <!-- 1. STATS BOARD (UPDATED) -->
     <div class="w-full lg:w-64 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-center gap-5 shadow-lg">
       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
         <i class="fa-solid fa-chart-pie text-indigo-400"></i> Statistik Semasa
       </h3>
+
+      <!-- Today Reg (MOVED TO TOP) -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-400">Daftar Hari Ini</span>
+          <span class="text-lg font-bold text-emerald-400 leading-none" id="statTodayReg">0</span>
+        </div>
+        <div class="w-full h-0.5 bg-slate-800 rounded-full"></div>
+      </div>
       
       <!-- Total Reg -->
       <div class="space-y-1.5">
@@ -68,16 +77,7 @@
         <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
           <div id="barTotalReg" class="h-full bg-indigo-500 w-0 transition-all duration-700"></div>
         </div>
-        <p class="text-[9px] text-slate-500 text-right">Sasaran: 7,000</p>
-      </div>
-
-      <!-- Today Reg -->
-      <div class="space-y-1.5">
-        <div class="flex justify-between items-end">
-          <span class="text-xs text-slate-400">Daftar Hari Ini</span>
-          <span class="text-lg font-bold text-emerald-400 leading-none" id="statTodayReg">0</span>
-        </div>
-        <div class="w-full h-0.5 bg-slate-800 rounded-full"></div>
+        <p class="text-[9px] text-slate-500 text-right font-mono" id="pctTotalReg">0.0%</p>
       </div>
 
       <!-- STIG-9 -->
@@ -89,7 +89,7 @@
         <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
           <div id="barStig" class="h-full bg-amber-400 w-0 transition-all duration-700"></div>
         </div>
-        <p class="text-[9px] text-slate-500 text-right" id="targetStig">Sasaran: 0 (30%)</p>
+        <p class="text-[9px] text-slate-500 text-right font-mono" id="pctStig">0.0%</p>
       </div>
 
       <!-- Keberkesanan -->
@@ -101,7 +101,7 @@
         <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
           <div id="barKeb" class="h-full bg-teal-400 w-0 transition-all duration-700"></div>
         </div>
-        <p class="text-[9px] text-slate-500 text-right" id="targetKeb">Sasaran: 0 (30%)</p>
+        <p class="text-[9px] text-slate-500 text-right font-mono" id="pctKeb">0.0%</p>
       </div>
     </div>
     
@@ -483,34 +483,39 @@
       const todayStr = new Date().toDateString();
       
       const totalReg = allParticipants.length;
-      // Filter for today's registrations based on regTime
       const totalRegToday = allParticipants.filter(p => new Date(p.regTime).toDateString() === todayStr).length;
       
       const totalStig = allParticipants.filter(p => p.stigDone).length;
       const totalKeb = allParticipants.filter(p => p.kebDone).length;
 
-      // Calculate Targets
+      // Calculate Targets (Hidden from UI, used for progress bars)
       const attendanceTarget = 7000;
-      // 30% of current attendance (minimum 1 to avoid dividing by 0 initially)
       const surveyTarget = Math.max(1, Math.ceil(totalReg * 0.3));
 
-      // Update Text
+      // Update Text Counters
       document.getElementById('statTotalReg').innerText = totalReg.toLocaleString();
       document.getElementById('statTodayReg').innerText = totalRegToday.toLocaleString();
       document.getElementById('statStig').innerText = totalStig.toLocaleString();
       document.getElementById('statKeb').innerText = totalKeb.toLocaleString();
-      
-      document.getElementById('targetStig').innerText = `Sasaran: ${surveyTarget.toLocaleString()} (30%)`;
-      document.getElementById('targetKeb').innerText = `Sasaran: ${surveyTarget.toLocaleString()} (30%)`;
 
-      // Animate Progress Bars (Max 100%)
-      const pctReg = Math.min(100, (totalReg / attendanceTarget) * 100);
-      const pctStig = Math.min(100, (totalStig / surveyTarget) * 100);
-      const pctKeb = Math.min(100, (totalKeb / surveyTarget) * 100);
+      // Calculate actual raw percentages to display to staff
+      const rawPctReg = (totalReg / attendanceTarget) * 100;
+      const rawPctStig = totalReg > 0 ? (totalStig / totalReg) * 100 : 0;
+      const rawPctKeb = totalReg > 0 ? (totalKeb / totalReg) * 100 : 0;
 
-      document.getElementById('barTotalReg').style.width = `${pctReg}%`;
-      document.getElementById('barStig').style.width = `${pctStig}%`;
-      document.getElementById('barKeb').style.width = `${pctKeb}%`;
+      // Update Percentage Text
+      document.getElementById('pctTotalReg').innerText = `${rawPctReg.toFixed(1)}%`;
+      document.getElementById('pctStig').innerText = `${rawPctStig.toFixed(1)}%`;
+      document.getElementById('pctKeb').innerText = `${rawPctKeb.toFixed(1)}%`;
+
+      // Animate Progress Bars (visually fill up based on the hidden targets, maxed at 100%)
+      const visualPctReg = Math.min(100, rawPctReg);
+      const visualPctStig = Math.min(100, (totalStig / surveyTarget) * 100);
+      const visualPctKeb = Math.min(100, (totalKeb / surveyTarget) * 100);
+
+      document.getElementById('barTotalReg').style.width = `${visualPctReg}%`;
+      document.getElementById('barStig').style.width = `${visualPctStig}%`;
+      document.getElementById('barKeb').style.width = `${visualPctKeb}%`;
     }
   </script>
 </body>

@@ -43,7 +43,6 @@
         <button id="btnRefresh" onclick="loadParticipants(true)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
           <i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula
         </button>
-        <!-- Butang Log Keluar Baru -->
         <button onclick="logoutAdmin()" class="bg-red-900/40 hover:bg-red-800/80 text-xs px-3 py-1.5 rounded-lg border border-red-800/50 flex items-center gap-1.5 transition text-red-300">
           <i class="fa-solid fa-right-from-bracket"></i> Keluar
         </button>
@@ -117,7 +116,7 @@
           <canvas id="wheelCanvas" width="380" height="380" class="rounded-full shadow-2xl border-4 border-slate-800 bg-slate-950 max-w-full h-auto"></canvas>
         </div>
         
-        <!-- UPDATED BUTTONS (Putar & Shotgun) -->
+        <!-- BUTTONS (Putar & Shotgun) -->
         <div class="flex items-center justify-center gap-3 mt-8 w-full max-w-[300px]">
           <button id="btnSpin" onclick="handleSpinClick()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-full shadow-lg transition-all duration-300 transform active:scale-95 text-sm uppercase tracking-wider flex items-center justify-center gap-2">
             <i class="fa-solid fa-play"></i> Putar
@@ -129,7 +128,7 @@
         </div>
       </div>
 
-      <!-- 3. WINNER & HISTORY BOARD (Fixed Height to stop layout shift!) -->
+      <!-- 3. WINNER & HISTORY BOARD -->
       <div class="w-full md:w-72 lg:w-80 shrink-0 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col h-[400px] md:h-[450px]">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <i class="fa-solid fa-trophy text-amber-400"></i> Pemenang Terpilih
@@ -203,7 +202,7 @@
         adminPin = savedPin;
         document.getElementById("pinInput").value = savedPin;
         document.getElementById("authOverlay").classList.add("hidden");
-        loadParticipants(true); // Tarik data terus di latar belakang
+        loadParticipants(true); 
       }
     });
 
@@ -256,7 +255,6 @@
           return;
         }
 
-        // SIMPAN PIN KE DALAM MEMORI JIKA BERJAYA
         sessionStorage.setItem("khs_admin_pin", adminPin);
         document.getElementById("authOverlay").classList.add("hidden");
         
@@ -283,8 +281,9 @@
         if (wheelParticipants.length > 0) {
           wheelCacheCanvas = null;
           drawRouletteWheel();
+        } else {
+          drawEmptyWheel("Semua Pemenang / Tiada Kehadiran");
         }
-        else drawEmptyWheel("Semua Pemenang / Tiada Kehadiran");
         
         renderWinnersList();
         updateStatsDashboard();
@@ -298,7 +297,6 @@
           refreshBtn.innerHTML = '<i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula';
         }
 
-        // BUKA SEMULA BUTANG PUTAR RODA
         if (btnSpin && safeToBlock) {
           btnSpin.disabled = false;
           btnSpin.innerHTML = '<i class="fa-solid fa-play"></i> Putar Roda';
@@ -329,7 +327,7 @@
       ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, 380, 380);
 
-      // 1. JIKA TIADA CACHE, KITA LUKIS RODA SEKALI SAHAJA (DI LATAR BELAKANG)
+      // 1. JIKA TIADA CACHE, KITA LUKIS RODA SEKALI SAHAJA
       if (!wheelCacheCanvas) {
         wheelCacheCanvas = document.createElement("canvas");
         wheelCacheCanvas.width = 380;
@@ -340,7 +338,7 @@
         arc = Math.PI * 2 / wheelParticipants.length;
 
         for (let i = 0; i < wheelParticipants.length; i++) {
-          const angle = i * arc; // Lukis pada sudut statik (0)
+          const angle = i * arc; 
           
           wCtx.fillStyle = colors[i % colors.length];
           wCtx.beginPath(); 
@@ -364,10 +362,10 @@
         wCtx.fillStyle = "#0f172a"; wCtx.beginPath(); wCtx.arc(190, 190, insideRadius - 5, 0, Math.PI * 2, true); wCtx.fill();
       }
 
-      // 2. PUTAR IMEJ (Bukan lukis semula 200 rekod) - Sangat Laju!
+      // 2. PUTAR IMEJ CACHE
       ctx.save();
       ctx.translate(190, 190);
-      ctx.rotate(startAngle); // Gunakan startAngle di sini sahaja
+      ctx.rotate(startAngle); 
       ctx.drawImage(wheelCacheCanvas, -190, -190);
       ctx.restore();
     }
@@ -384,7 +382,6 @@
         return;
       }
 
-      // SPEED FIX: Only 1 second charge-up time!
       let timeLeft = 1; 
       btn.innerHTML = `<i class="fa-solid fa-xmark"></i> Batal (${timeLeft}s)`;
       btn.classList.replace('from-amber-500', 'from-red-500');
@@ -408,7 +405,6 @@
         
         spinAngleStart = Math.random() * 10 + 10;
         spinTime = 0;
-        // SPEED FIX: Spins for only 2 to 4 seconds
         spinTimeTotal = Math.random() * 2000 + 2000; 
         rotateWheel();
       }, 1000); 
@@ -424,7 +420,6 @@
       const btn = document.getElementById("btnSpin");
       btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Sedia...';
       
-      // SPEED FIX: Cooldown is only 2 seconds now
       setTimeout(() => {
         isSpinning = false;
         resetSpinButton();
@@ -475,12 +470,10 @@
 
       let newWinners = [];
       
-      // Draw multiple winners instantly
       for (let i = 0; i < drawCount; i++) {
         const randomIndex = Math.floor(Math.random() * wheelParticipants.length);
         const winner = wheelParticipants.splice(randomIndex, 1)[0];
         
-        // Push secretly to backend without waiting (prevents lag)
         fetch(GAS_URL, { 
           method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
           body: JSON.stringify({ action: "submit_winner", userId: winner.id }) 
@@ -489,10 +482,8 @@
         newWinners.push({ id: winner.id, name: winner.name, address: winner.address, claimed: false });
       }
 
-      // Add to history list (newest first)
       winnersHistory = [...newWinners.reverse(), ...winnersHistory];
 
-      // Update UI
       document.getElementById("totalParticipantsBadge").innerText = `${wheelParticipants.length} Hadir & Layak`;
       if (wheelParticipants.length > 0) {
         wheelCacheCanvas = null;
@@ -500,7 +491,6 @@
       } else {
         drawEmptyWheel("Semua Telah Menang!");
       }
-      else drawEmptyWheel("Semua Telah Menang!");
       
       renderWinnersList();
       confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
@@ -531,7 +521,6 @@
       } else {
         drawEmptyWheel("Semua Telah Menang!");
       }
-      else drawEmptyWheel("Semua Telah Menang!");
 
       winnersHistory.unshift({ id: winner.id, name: winner.name, address: winner.address, claimed: false });
       renderWinnersList();
@@ -654,6 +643,5 @@
       document.getElementById('barKeb').style.width = `${visualPctKeb}%`;
     }
   </script>
-
-  </body>
+</body>
 </html>

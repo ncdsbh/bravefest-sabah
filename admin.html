@@ -158,9 +158,10 @@
     let allParticipants = []; 
     let wheelParticipants = []; 
     let winnersHistory = [];
-    // Add these variables at the top
+    
+    // Spin & Countdown Variables
     let pendingSpinTimeout = null;
-    let countdownInterval = null; // Tambah ini
+    let countdownInterval = null; 
     let isSpinning = false;
     
     let startAngle = 0, arc = 0, spinTimeout = null, spinAngleStart = 10, spinTime = 0, spinTimeTotal = 0, ctx;
@@ -209,9 +210,9 @@
         const res = await fetch(`${GAS_URL}?action=admin_fetch&pin=${encodeURIComponent(adminPin)}&_t=${new Date().getTime()}`);
         const data = await res.json();
 
-        if (data.stus === "error") {
+        if (data.status === "error") { // Fixed typo here (was data.stus)
           alert("PIN Keselamatan Tidak Sah atau Telah Diubah!");
-          sessionStorage.removeItem("khs_admin_pin"); // Padam memori jika salah
+          sessionStorage.removeItem("khs_admin_pin"); 
           document.getElementById("authOverlay").classList.remove("hidden");
           if (!isRefresh) resetAuthButton();
           return;
@@ -219,11 +220,6 @@
 
         // SIMPAN PIN KE DALAM MEMORI JIKA BERJAYA
         sessionStorage.setItem("khs_admin_pin", adminPin);
-
-        document.getElementById("authOverlay").classList.add("hidden");
-        
-        allParticipants = data.participants || [];
-
         document.getElementById("authOverlay").classList.add("hidden");
         
         allParticipants = data.participants || [];
@@ -309,11 +305,6 @@
       ctx.fillStyle = "#0f172a"; ctx.beginPath(); ctx.arc(190, 190, insideRadius - 5, 0, Math.PI * 2, true); ctx.fill();
     }
 
-    // Add these two variables at the top of your script where you declare your other variables
-    let pendingSpinTimeout = null;
-    let isSpinning = false;
-
-    // Replace the old spinWheel() function with this handleSpinClick() function
     function handleSpinClick() {
       if (wheelParticipants.length === 0 || isSpinning) return;
       const btn = document.getElementById("btnSpin");
@@ -321,14 +312,14 @@
       // 1. If clicked while waiting, CANCEL the spin
       if (pendingSpinTimeout) {
         clearTimeout(pendingSpinTimeout);
-        clearInterval(countdownInterval); // Hentikan live countdown
+        clearInterval(countdownInterval); 
         pendingSpinTimeout = null;
         resetSpinButton();
         return;
       }
 
       // 2. Initiate the "Charge-Up" cancel window
-      let timeLeft = 3; // Ubah jumlah saat di sini jika mahu lebih lama
+      let timeLeft = 3; 
       btn.innerHTML = `<i class="fa-solid fa-xmark"></i> Batal Putaran (${timeLeft}s)`;
       btn.classList.replace('from-amber-500', 'from-red-500');
       btn.classList.replace('to-amber-600', 'to-red-600');
@@ -336,7 +327,7 @@
       btn.classList.replace('hover:to-amber-700', 'hover:to-red-700');
       btn.classList.replace('text-slate-950', 'text-white');
 
-      // Live visual countdown updating every 1000ms (1 second)
+      // Live visual countdown
       countdownInterval = setInterval(() => {
         timeLeft--;
         if (timeLeft > 0) {
@@ -346,7 +337,6 @@
 
       // The actual spin trigger
       pendingSpinTimeout = setTimeout(() => {
-        // Time is up, clear the interval and start the actual spin!
         clearInterval(countdownInterval);
         pendingSpinTimeout = null;
         isSpinning = true;
@@ -358,10 +348,9 @@
         spinTime = 0;
         spinTimeTotal = Math.random() * 3000 + 4000;
         rotateWheel();
-      }, 3000); // Pastikan masa ini sama dengan nilai timeLeft (3000 = 3s)
+      }, 3000); 
     }
     
-    // Replace your old stopRotateWheel() function with this
     function stopRotateWheel() {
       cancelAnimationFrame(spinTimeout);
       const degrees = startAngle * 180 / Math.PI + 90;
@@ -369,7 +358,6 @@
       
       announceWinner(wheelParticipants[index], index);
       
-      // Implement 5-second Cooldown AFTER the spin completes
       const btn = document.getElementById("btnSpin");
       btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Sedia Sebentar...';
       
@@ -379,7 +367,6 @@
       }, 5000);
     }
 
-    // Add this helper function to restore the button to its default state
     function resetSpinButton() {
       const btn = document.getElementById("btnSpin");
       btn.disabled = false;
@@ -402,7 +389,6 @@
 
     function announceWinner(winner, index) {
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-
       fetch(GAS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "submit_winner", userId: winner.id }) });
 
       wheelParticipants.splice(index, 1);
@@ -468,7 +454,6 @@
             <p class="text-xs font-bold text-white">${p.name}</p>
             <p class="text-[10px] text-slate-400 font-mono mt-0.5">${p.id} • ${p.role.toUpperCase()}</p>
             
-            <!-- Lencana Status Tinjauan -->
             <div class="flex flex-wrap gap-1.5 mt-2">
               <span class="text-[9px] px-1.5 py-0.5 rounded border ${p.stigDone ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800' : 'bg-slate-800 text-slate-500 border-slate-700'}">
                 <i class="fa-solid ${p.stigDone ? 'fa-check' : 'fa-xmark'}"></i> STIG-9
@@ -508,27 +493,22 @@
       const totalStig = allParticipants.filter(p => p.stigDone).length;
       const totalKeb = allParticipants.filter(p => p.kebDone).length;
 
-      // Calculate Targets (Hidden from UI, used for progress bars)
       const attendanceTarget = 7000;
       const surveyTarget = Math.max(1, Math.ceil(totalReg * 0.3));
 
-      // Update Text Counters
       document.getElementById('statTotalReg').innerText = totalReg.toLocaleString();
       document.getElementById('statTodayReg').innerText = totalRegToday.toLocaleString();
       document.getElementById('statStig').innerText = totalStig.toLocaleString();
       document.getElementById('statKeb').innerText = totalKeb.toLocaleString();
 
-      // Calculate actual raw percentages to display to staff
       const rawPctReg = (totalReg / attendanceTarget) * 100;
       const rawPctStig = totalReg > 0 ? (totalStig / totalReg) * 100 : 0;
       const rawPctKeb = totalReg > 0 ? (totalKeb / totalReg) * 100 : 0;
 
-      // Update Percentage Text
       document.getElementById('pctTotalReg').innerText = `${rawPctReg.toFixed(1)}%`;
       document.getElementById('pctStig').innerText = `${rawPctStig.toFixed(1)}%`;
       document.getElementById('pctKeb').innerText = `${rawPctKeb.toFixed(1)}%`;
 
-      // Animate Progress Bars (visually fill up based on the hidden targets, maxed at 100%)
       const visualPctReg = Math.min(100, rawPctReg);
       const visualPctStig = Math.min(100, (totalStig / surveyTarget) * 100);
       const visualPctKeb = Math.min(100, (totalKeb / surveyTarget) * 100);
@@ -538,5 +518,6 @@
       document.getElementById('barKeb').style.width = `${visualPctKeb}%`;
     }
   </script>
-</body>
+
+  </body>
 </html>

@@ -40,7 +40,7 @@
         <button onclick="openRecoveryModal()" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-1.5 rounded-lg border border-indigo-500 flex items-center gap-1.5 transition text-white shadow-sm">
           <i class="fa-solid fa-life-ring"></i> Pemulihan Profil
         </button>
-        <button id="btnRefresh" onclick="loadParticipants(true)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+        <button id="btnRefresh" onclick="loadParticipants(true)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition" title="Muat semula senarai peserta dari Google Sheets">
           <i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula
         </button>
         <button onclick="logoutAdmin()" class="bg-red-900/40 hover:bg-red-800/80 text-xs px-3 py-1.5 rounded-lg border border-red-800/50 flex items-center gap-1.5 transition text-red-300">
@@ -58,7 +58,6 @@
         <i class="fa-solid fa-chart-pie text-indigo-400"></i> Statistik Semasa
       </h3>
 
-      <!-- Today Reg -->
       <div class="space-y-1.5">
         <div class="flex justify-between items-end">
           <span class="text-xs text-slate-400">Daftar Hari Ini</span>
@@ -67,7 +66,6 @@
         <div class="w-full h-0.5 bg-slate-800 rounded-full"></div>
       </div>
       
-      <!-- Total Reg -->
       <div class="space-y-1.5">
         <div class="flex justify-between items-end">
           <span class="text-xs text-slate-400">Jumlah Daftar</span>
@@ -79,7 +77,6 @@
         <p class="text-[9px] text-slate-500 text-right font-mono" id="pctTotalReg">0.0%</p>
       </div>
 
-      <!-- STIG-9 -->
       <div class="space-y-1.5">
         <div class="flex justify-between items-end">
           <span class="text-xs text-slate-400">Selesai STIG-9</span>
@@ -91,7 +88,6 @@
         <p class="text-[9px] text-slate-500 text-right font-mono" id="pctStig">0.0%</p>
       </div>
 
-      <!-- Keberkesanan -->
       <div class="space-y-1.5">
         <div class="flex justify-between items-end">
           <span class="text-xs text-slate-400">Selesai Penilaian</span>
@@ -116,7 +112,6 @@
           <canvas id="wheelCanvas" width="380" height="380" class="rounded-full shadow-2xl border-4 border-slate-800 bg-slate-950 max-w-full h-auto"></canvas>
         </div>
         
-        <!-- BUTTONS (Putar & Shotgun) -->
         <div class="flex items-center justify-center gap-3 mt-8 w-full max-w-[300px]">
           <button id="btnSpin" onclick="handleSpinClick()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-full shadow-lg transition-all duration-300 transform active:scale-95 text-sm uppercase tracking-wider flex items-center justify-center gap-2">
             <i class="fa-solid fa-play"></i> Putar
@@ -130,9 +125,14 @@
 
       <!-- 3. WINNER & HISTORY BOARD -->
       <div class="w-full md:w-72 lg:w-80 shrink-0 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col h-[400px] md:h-[450px]">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <i class="fa-solid fa-trophy text-amber-400"></i> Pemenang Terpilih
-        </h3>
+        <div class="flex justify-between items-center mb-2 border-b border-slate-800/80 pb-2">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-trophy text-amber-400"></i> Pemenang
+          </h3>
+          <button onclick="clearWinnersFrontend()" class="text-[10px] bg-red-900/40 hover:bg-red-800 text-red-300 px-2 py-1 rounded border border-red-800/50 transition flex items-center gap-1" title="Kosongkan senarai dari paparan ini">
+            <i class="fa-solid fa-trash-can"></i> Kosongkan
+          </button>
+        </div>
         <div id="winnersList" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
           <p class="text-slate-600 italic text-center my-auto h-full flex items-center justify-center">Belum ada pemenang diputar.</p>
         </div>
@@ -185,17 +185,14 @@
     let wheelParticipants = []; 
     let winnersHistory = [];
     
-    // Spin & Countdown Variables
     let pendingSpinTimeout = null;
     let countdownInterval = null; 
     let isSpinning = false;
-
-    let wheelCacheCanvas = null; // Memori untuk pre-render roda
+    let wheelCacheCanvas = null; 
     
-    let startAngle = 0, arc = 0, spinTimeout = null, spinAngleStart = 10, spinTime = 0, spinTimeTotal = 0, ctx;
+    let startAngle = 0, spinTimeout = null, spinAngleStart = 10, spinTime = 0, spinTimeTotal = 0, ctx;
     const colors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#06b6d4", "#84cc16"];
 
-    // --- SEMAK MEMORI SESI (SESSION STORAGE) ---
     window.addEventListener("DOMContentLoaded", () => {
       const savedPin = sessionStorage.getItem("khs_admin_pin");
       if (savedPin) {
@@ -206,7 +203,6 @@
       }
     });
 
-    // --- FUNGSI LOG KELUAR ---
     function logoutAdmin() {
       sessionStorage.removeItem("khs_admin_pin");
       adminPin = "";
@@ -234,7 +230,6 @@
         refreshBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> Menyemak...';
       }
 
-      // KUNCI BUTANG PUTAR RODA SEMASA LOADING
       const btnSpin = document.getElementById("btnSpin");
       const safeToBlock = !isSpinning && !pendingSpinTimeout;
       if (btnSpin && safeToBlock) {
@@ -263,13 +258,29 @@
         const rawWinners = data.winners || [];
         
         const todayStr = new Date().toDateString();
-        const todayAttendeeIds = rawAttendance
-          .filter(a => new Date(a.time).toDateString() === todayStr)
-          .map(a => a.id);
-          
+        const todayAttendeeIds = rawAttendance.filter(a => new Date(a.time).toDateString() === todayStr).map(a => a.id);
         const winnerIds = rawWinners.map(w => w.id);
         
-        wheelParticipants = allParticipants.filter(p => todayAttendeeIds.includes(p.id) && !winnerIds.includes(p.id));
+        // Buat peta masa daftar kehadiran
+        const attMap = {};
+        rawAttendance.forEach(a => {
+          const time = new Date(a.time).getTime();
+          if (!attMap[a.id] || time > attMap[a.id]) {
+            attMap[a.id] = time;
+          }
+        });
+
+        const now = new Date().getTime();
+        const TWO_HOURS = 2 * 60 * 60 * 1000;
+
+        wheelParticipants = allParticipants
+          .filter(p => todayAttendeeIds.includes(p.id) && !winnerIds.includes(p.id))
+          .map(p => {
+            const pTime = attMap[p.id] || 0;
+            // +40% peluang (weight = 1.4) untuk kehadiran < 2 jam
+            const weight = (now - pTime <= TWO_HOURS) ? 1.4 : 1.0;
+            return { ...p, weight: weight };
+          });
         
         winnersHistory = rawWinners.map(w => {
           const profile = allParticipants.find(p => p.id === w.id);
@@ -313,6 +324,14 @@
       btn.classList.add("bg-indigo-600");
     }
 
+    function clearWinnersFrontend() {
+      if (winnersHistory.length === 0) return;
+      if (confirm("Adakah anda pasti mahu mengosongkan senarai pemenang di paparan ini?\n\n(Data di dalam Google Sheets TIDAK akan dipadam)")) {
+        winnersHistory = [];
+        renderWinnersList();
+      }
+    }
+
     function drawEmptyWheel(text) {
       const canvas = document.getElementById("wheelCanvas");
       ctx = canvas.getContext("2d");
@@ -327,7 +346,6 @@
       ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, 380, 380);
 
-      // 1. JIKA TIADA CACHE, KITA LUKIS RODA SEKALI SAHAJA
       if (!wheelCacheCanvas) {
         wheelCacheCanvas = document.createElement("canvas");
         wheelCacheCanvas.width = 380;
@@ -335,34 +353,41 @@
         const wCtx = wheelCacheCanvas.getContext("2d");
         
         const outsideRadius = 180, textRadius = 115, insideRadius = 40;
-        arc = Math.PI * 2 / wheelParticipants.length;
+        let totalWeight = wheelParticipants.reduce((sum, p) => sum + p.weight, 0);
+        let currentAngle = 0;
 
         for (let i = 0; i < wheelParticipants.length; i++) {
-          const angle = i * arc; 
+          const p = wheelParticipants[i];
+          const sliceArc = (p.weight / totalWeight) * (Math.PI * 2);
+          
+          p.startArc = currentAngle;
+          p.endArc = currentAngle + sliceArc;
           
           wCtx.fillStyle = colors[i % colors.length];
           wCtx.beginPath(); 
-          wCtx.arc(190, 190, outsideRadius, angle, angle + arc, false); 
-          wCtx.arc(190, 190, insideRadius, angle + arc, angle, true); 
+          wCtx.arc(190, 190, outsideRadius, currentAngle, currentAngle + sliceArc, false); 
+          wCtx.arc(190, 190, insideRadius, currentAngle + sliceArc, currentAngle, true); 
           wCtx.fill();
 
           wCtx.save();
           wCtx.fillStyle = "#ffffff";
-          wCtx.translate(190 + Math.cos(angle + arc / 2) * textRadius, 190 + Math.sin(angle + arc / 2) * textRadius);
-          wCtx.rotate(angle + arc / 2 + Math.PI);
           
-          const p = wheelParticipants[i];
+          const textAngle = currentAngle + sliceArc / 2;
+          wCtx.translate(190 + Math.cos(textAngle) * textRadius, 190 + Math.sin(textAngle) * textRadius);
+          wCtx.rotate(textAngle + Math.PI);
+          
           const dispName = p.name.length > 15 ? p.name.substring(0, 13) + "…" : p.name;
           const dispAddr = p.address.length > 15 ? p.address.substring(0, 13) + "…" : p.address;
 
           wCtx.font = "bold 11px sans-serif"; wCtx.fillText(dispName, -wCtx.measureText(dispName).width / 2, -4);
           wCtx.font = "normal 9px sans-serif"; wCtx.fillStyle = "rgba(255,255,255,0.7)"; wCtx.fillText(dispAddr, -wCtx.measureText(dispAddr).width / 2, 8);
           wCtx.restore();
+
+          currentAngle += sliceArc;
         }
         wCtx.fillStyle = "#0f172a"; wCtx.beginPath(); wCtx.arc(190, 190, insideRadius - 5, 0, Math.PI * 2, true); wCtx.fill();
       }
 
-      // 2. PUTAR IMEJ CACHE
       ctx.save();
       ctx.translate(190, 190);
       ctx.rotate(startAngle); 
@@ -412,10 +437,19 @@
     
     function stopRotateWheel() {
       cancelAnimationFrame(spinTimeout);
-      const degrees = startAngle * 180 / Math.PI + 90;
-      const index = Math.floor((360 - degrees % 360) / (arc * 180 / Math.PI)) % wheelParticipants.length;
       
-      announceWinner(wheelParticipants[index], index);
+      let pointerAngle = (Math.PI * 1.5 - (startAngle % (Math.PI * 2)));
+      if (pointerAngle < 0) pointerAngle += Math.PI * 2;
+      
+      let winnerIndex = 0;
+      for (let i = 0; i < wheelParticipants.length; i++) {
+        if (pointerAngle >= wheelParticipants[i].startArc && pointerAngle < wheelParticipants[i].endArc) {
+          winnerIndex = i;
+          break;
+        }
+      }
+      
+      announceWinner(wheelParticipants[winnerIndex], winnerIndex);
       
       const btn = document.getElementById("btnSpin");
       btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Sedia...';
@@ -439,7 +473,6 @@
       btn.classList.add('cursor-pointer');
     }
 
-    // --- SHOTGUN MODE LOGIC ---
     function openShotgunModal() {
       if (wheelParticipants.length === 0) {
         alert("Roda telah kosong! Sila muat semula atau tunggu pendaftaran baru.");
@@ -471,8 +504,19 @@
       let newWinners = [];
       
       for (let i = 0; i < drawCount; i++) {
-        const randomIndex = Math.floor(Math.random() * wheelParticipants.length);
-        const winner = wheelParticipants.splice(randomIndex, 1)[0];
+        const totalWeight = wheelParticipants.reduce((sum, p) => sum + p.weight, 0);
+        let random = Math.random() * totalWeight;
+        let winnerIndex = wheelParticipants.length - 1;
+        
+        for (let j = 0; j < wheelParticipants.length; j++) {
+          if (random < wheelParticipants[j].weight) {
+            winnerIndex = j;
+            break;
+          }
+          random -= wheelParticipants[j].weight;
+        }
+        
+        const winner = wheelParticipants.splice(winnerIndex, 1)[0];
         
         fetch(GAS_URL, { 
           method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, 
@@ -528,7 +572,7 @@
 
     function renderWinnersList() {
       const list = document.getElementById("winnersList");
-      if (winnersHistory.length === 0) { list.innerHTML = '<p class="text-slate-600 italic text-center my-auto">Belum ada pemenang diputar.</p>'; return; }
+      if (winnersHistory.length === 0) { list.innerHTML = '<p class="text-slate-600 italic text-center my-auto h-full flex items-center justify-center">Belum ada pemenang diputar.</p>'; return; }
 
       list.innerHTML = winnersHistory.map((w, i) => {
         let cardClass = "p-3 border rounded-xl flex items-center justify-between cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ";
@@ -557,7 +601,6 @@
     function toggleClaim(index) { winnersHistory[index].claimed = !winnersHistory[index].claimed; renderWinnersList(); }
     function easeOut(t, b, c, d) { const ts = (t /= d) * t, tc = ts * t; return b + c * (tc + -3 * ts + 3 * t); }
 
-    // --- RECOVERY LOGIC ---
     function openRecoveryModal() {
       if(allParticipants.length === 0) { alert("Sila buka panel dahulu."); return; }
       document.getElementById('recoveryModal').classList.replace('hidden', 'flex');

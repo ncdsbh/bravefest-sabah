@@ -98,10 +98,6 @@
 
       <div id="profilesContainer" class="space-y-3"></div>
 
-      <!-- ADD REGISTER BUTTON (If they need to register another staff member on the same device) -->
-      <button onclick="showRegistrationView()" class="w-full mt-4 py-3 border-2 border-dashed border-slate-300 bg-white text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition flex items-center justify-center gap-2 shadow-sm">
-        <i class="fa-solid fa-user-plus"></i> Daftar Kakitangan Lain
-      </button>
     </section>
     
     <!-- BANNER -->
@@ -270,12 +266,12 @@
     });
 
     function getLocalProfiles() {
-      // Uses the same local storage key so profiles aren't lost if they switch between Index.html and Staff.html
-      return JSON.parse(localStorage.getItem("khs_profiles") || "[]");
+      // Changed to 'khs_staff_profiles' so it doesn't mix with Index.html (public)
+      return JSON.parse(localStorage.getItem("khs_staff_profiles") || "[]");
     }
 
     function setLocalProfiles(profiles) {
-      localStorage.setItem("khs_profiles", JSON.stringify(profiles));
+      localStorage.setItem("khs_staff_profiles", JSON.stringify(profiles));
     }
 
     function initView() {

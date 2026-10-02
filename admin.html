@@ -280,7 +280,10 @@
 
         document.getElementById("totalParticipantsBadge").innerText = `${wheelParticipants.length} Hadir & Layak`;
 
-        if (wheelParticipants.length > 0) drawRouletteWheel();
+        if (wheelParticipants.length > 0) {
+          wheelCacheCanvas = null;
+          drawRouletteWheel();
+        }
         else drawEmptyWheel("Semua Pemenang / Tiada Kehadiran");
         
         renderWinnersList();
@@ -491,7 +494,12 @@
 
       // Update UI
       document.getElementById("totalParticipantsBadge").innerText = `${wheelParticipants.length} Hadir & Layak`;
-      if (wheelParticipants.length > 0) drawRouletteWheel();
+      if (wheelParticipants.length > 0) {
+        wheelCacheCanvas = null;
+        drawRouletteWheel();
+      } else {
+        drawEmptyWheel("Semua Telah Menang!");
+      }
       else drawEmptyWheel("Semua Telah Menang!");
       
       renderWinnersList();
@@ -517,7 +525,12 @@
       wheelParticipants.splice(index, 1);
       document.getElementById("totalParticipantsBadge").innerText = `${wheelParticipants.length} Hadir & Layak`;
       
-      if (wheelParticipants.length > 0) drawRouletteWheel();
+      if (wheelParticipants.length > 0) {
+        wheelCacheCanvas = null;
+        drawRouletteWheel();
+      } else {
+        drawEmptyWheel("Semua Telah Menang!");
+      }
       else drawEmptyWheel("Semua Telah Menang!");
 
       winnersHistory.unshift({ id: winner.id, name: winner.name, address: winner.address, claimed: false });

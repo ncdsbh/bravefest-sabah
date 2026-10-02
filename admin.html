@@ -51,26 +51,80 @@
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto p-4 flex-1 flex flex-col md:flex-row items-center justify-center gap-8 w-full">
+  <main class="max-w-6xl mx-auto p-4 flex-1 flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-6 w-full">
     
-    <!-- WHEEL DISPLAY -->
-    <div class="flex flex-col items-center justify-center relative">
+    <!-- 1. STATS BOARD (NEW) -->
+    <div class="w-full lg:w-64 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-center gap-5 shadow-lg">
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+        <i class="fa-solid fa-chart-pie text-indigo-400"></i> Statistik Semasa
+      </h3>
+      
+      <!-- Total Reg -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-400">Jumlah Daftar</span>
+          <span class="text-lg font-bold text-white leading-none" id="statTotalReg">0</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barTotalReg" class="h-full bg-indigo-500 w-0 transition-all duration-700"></div>
+        </div>
+        <p class="text-[9px] text-slate-500 text-right">Sasaran: 7,000</p>
+      </div>
+
+      <!-- Today Reg -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-400">Daftar Hari Ini</span>
+          <span class="text-lg font-bold text-emerald-400 leading-none" id="statTodayReg">0</span>
+        </div>
+        <div class="w-full h-0.5 bg-slate-800 rounded-full"></div>
+      </div>
+
+      <!-- STIG-9 -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-400">Selesai STIG-9</span>
+          <span class="text-lg font-bold text-white leading-none" id="statStig">0</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barStig" class="h-full bg-amber-400 w-0 transition-all duration-700"></div>
+        </div>
+        <p class="text-[9px] text-slate-500 text-right" id="targetStig">Sasaran: 0 (30%)</p>
+      </div>
+
+      <!-- Keberkesanan -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-400">Selesai Penilaian</span>
+          <span class="text-lg font-bold text-white leading-none" id="statKeb">0</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barKeb" class="h-full bg-teal-400 w-0 transition-all duration-700"></div>
+        </div>
+        <p class="text-[9px] text-slate-500 text-right" id="targetKeb">Sasaran: 0 (30%)</p>
+      </div>
+    </div>
+    
+    <!-- 2. WHEEL DISPLAY (UPDATED BUTTON) -->
+    <div class="flex flex-col items-center justify-center relative flex-1">
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-amber-400 text-2xl drop-shadow-md">
         <i class="fa-solid fa-location-pin"></i>
       </div>
       <canvas id="wheelCanvas" width="380" height="380" class="rounded-full shadow-2xl border-4 border-slate-800 bg-slate-950"></canvas>
-      <button id="btnSpin" onclick="spinWheel()" class="mt-6 px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-full shadow-lg transition transform active:scale-95 text-sm uppercase tracking-wider flex items-center gap-2">
+      
+      <!-- Changed onclick to handleSpinClick() and added an ID for color swapping -->
+      <button id="btnSpin" onclick="handleSpinClick()" class="mt-6 px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-full shadow-lg transition-all duration-300 transform active:scale-95 text-sm uppercase tracking-wider flex items-center justify-center gap-2 min-w-[200px]">
         <i class="fa-solid fa-play"></i> Putar Roda
       </button>
     </div>
 
-    <!-- WINNER & HISTORY BOARD -->
-    <div class="w-full md:w-80 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col h-[380px]">
+    <!-- 3. WINNER & HISTORY BOARD -->
+    <div class="w-full lg:w-80 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col h-[400px]">
       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
         <i class="fa-solid fa-trophy text-amber-400"></i> Pemenang Terpilih
       </h3>
       <div id="winnersList" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
-        <p class="text-slate-600 italic text-center my-auto">Belum ada pemenang diputar.</p>
+        <p class="text-slate-600 italic text-center my-auto h-full flex items-center justify-center">Belum ada pemenang diputar.</p>
       </div>
     </div>
   </main>
@@ -188,6 +242,7 @@
         else drawEmptyWheel("Semua Pemenang / Tiada Kehadiran");
         
         renderWinnersList();
+        updateStatsDashboard();
         
       } catch (e) {
         alert("Gagal menyambung ke pangkalan data.");
@@ -246,13 +301,75 @@
       ctx.fillStyle = "#0f172a"; ctx.beginPath(); ctx.arc(190, 190, insideRadius - 5, 0, Math.PI * 2, true); ctx.fill();
     }
 
-    function spinWheel() {
-      if (wheelParticipants.length === 0) return;
-      document.getElementById("btnSpin").disabled = true;
-      spinAngleStart = Math.random() * 10 + 10;
-      spinTime = 0;
-      spinTimeTotal = Math.random() * 3000 + 4000;
-      rotateWheel();
+    // Add these two variables at the top of your script where you declare your other variables
+    let pendingSpinTimeout = null;
+    let isSpinning = false;
+
+    // Replace the old spinWheel() function with this handleSpinClick() function
+    function handleSpinClick() {
+      if (wheelParticipants.length === 0 || isSpinning) return;
+      const btn = document.getElementById("btnSpin");
+
+      // 1. If clicked while waiting, CANCEL the spin
+      if (pendingSpinTimeout) {
+        clearTimeout(pendingSpinTimeout);
+        pendingSpinTimeout = null;
+        resetSpinButton();
+        return;
+      }
+
+      // 2. Initiate the 3-second "Charge-Up" cancel window
+      btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Batal Putaran (3s)';
+      btn.classList.replace('from-amber-500', 'from-red-500');
+      btn.classList.replace('to-amber-600', 'to-red-600');
+      btn.classList.replace('hover:from-amber-600', 'hover:from-red-600');
+      btn.classList.replace('hover:to-amber-700', 'hover:to-red-700');
+      btn.classList.replace('text-slate-950', 'text-white');
+
+      pendingSpinTimeout = setTimeout(() => {
+        // Time is up, start the actual spin!
+        pendingSpinTimeout = null;
+        isSpinning = true;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-sync fa-spin"></i> Sedang Memutar...';
+        btn.classList.remove('cursor-pointer');
+        
+        spinAngleStart = Math.random() * 10 + 10;
+        spinTime = 0;
+        spinTimeTotal = Math.random() * 3000 + 4000;
+        rotateWheel();
+      }, 3000);
+    }
+
+    // Replace your old stopRotateWheel() function with this
+    function stopRotateWheel() {
+      cancelAnimationFrame(spinTimeout);
+      const degrees = startAngle * 180 / Math.PI + 90;
+      const index = Math.floor((360 - degrees % 360) / (arc * 180 / Math.PI)) % wheelParticipants.length;
+      
+      announceWinner(wheelParticipants[index], index);
+      
+      // Implement 5-second Cooldown AFTER the spin completes
+      const btn = document.getElementById("btnSpin");
+      btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Sedia Sebentar...';
+      
+      setTimeout(() => {
+        isSpinning = false;
+        resetSpinButton();
+      }, 5000);
+    }
+
+    // Add this helper function to restore the button to its default state
+    function resetSpinButton() {
+      const btn = document.getElementById("btnSpin");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-play"></i> Putar Roda';
+      btn.classList.replace('from-red-500', 'from-amber-500');
+      btn.classList.replace('to-red-600', 'to-amber-600');
+      btn.classList.replace('hover:from-red-600', 'hover:from-amber-600');
+      btn.classList.replace('hover:to-red-700', 'hover:to-amber-700');
+      btn.classList.replace('text-white', 'text-slate-950');
+      btn.classList.add('cursor-pointer');
     }
 
     function rotateWheel() {
@@ -261,14 +378,6 @@
       startAngle += ((spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal)) * Math.PI / 180);
       drawRouletteWheel();
       spinTimeout = requestAnimationFrame(rotateWheel);
-    }
-
-    function stopRotateWheel() {
-      cancelAnimationFrame(spinTimeout);
-      const degrees = startAngle * 180 / Math.PI + 90;
-      const index = Math.floor((360 - degrees % 360) / (arc * 180 / Math.PI)) % wheelParticipants.length;
-      announceWinner(wheelParticipants[index], index);
-      document.getElementById("btnSpin").disabled = false;
     }
 
     function announceWinner(winner, index) {
@@ -368,6 +477,40 @@
     function hideRecoveryQr() {
       document.getElementById('recoveryQrContainer').classList.replace('flex', 'hidden');
       document.getElementById('searchResults').classList.remove('hidden'); document.getElementById('searchInput').classList.remove('hidden');
+    }
+
+    function updateStatsDashboard() {
+      const todayStr = new Date().toDateString();
+      
+      const totalReg = allParticipants.length;
+      // Filter for today's registrations based on regTime
+      const totalRegToday = allParticipants.filter(p => new Date(p.regTime).toDateString() === todayStr).length;
+      
+      const totalStig = allParticipants.filter(p => p.stigDone).length;
+      const totalKeb = allParticipants.filter(p => p.kebDone).length;
+
+      // Calculate Targets
+      const attendanceTarget = 7000;
+      // 30% of current attendance (minimum 1 to avoid dividing by 0 initially)
+      const surveyTarget = Math.max(1, Math.ceil(totalReg * 0.3));
+
+      // Update Text
+      document.getElementById('statTotalReg').innerText = totalReg.toLocaleString();
+      document.getElementById('statTodayReg').innerText = totalRegToday.toLocaleString();
+      document.getElementById('statStig').innerText = totalStig.toLocaleString();
+      document.getElementById('statKeb').innerText = totalKeb.toLocaleString();
+      
+      document.getElementById('targetStig').innerText = `Sasaran: ${surveyTarget.toLocaleString()} (30%)`;
+      document.getElementById('targetKeb').innerText = `Sasaran: ${surveyTarget.toLocaleString()} (30%)`;
+
+      // Animate Progress Bars (Max 100%)
+      const pctReg = Math.min(100, (totalReg / attendanceTarget) * 100);
+      const pctStig = Math.min(100, (totalStig / surveyTarget) * 100);
+      const pctKeb = Math.min(100, (totalKeb / surveyTarget) * 100);
+
+      document.getElementById('barTotalReg').style.width = `${pctReg}%`;
+      document.getElementById('barStig').style.width = `${pctStig}%`;
+      document.getElementById('barKeb').style.width = `${pctKeb}%`;
     }
   </script>
 </body>

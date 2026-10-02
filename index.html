@@ -182,6 +182,64 @@
     </div>
   </div>
 
+  <!-- MODAL: EDIT PROFILE -->
+  <div id="editModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+        <h3 class="font-bold text-slate-800 text-base">Kemas Kini Profil</h3>
+        <button onclick="closeModal('editModal')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+      <div class="p-4 overflow-y-auto">
+        <form id="editForm" class="space-y-3">
+          <input type="hidden" id="edit_id">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Nama Penuh *</label>
+            <input type="text" required id="edit_name" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300 focus:ring-1 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">E-mel (Pilihan)</label>
+            <input type="email" id="edit_email" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300 focus:ring-1 focus:ring-indigo-500 outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Jantina *</label>
+              <select required id="edit_gender" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300">
+                <option value="Lelaki">Lelaki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Umur *</label>
+              <input type="number" required id="edit_age" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Status Pekerjaan *</label>
+              <select required id="edit_employment" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300">
+                <option value="Kerajaan">Kerajaan</option>
+                <option value="Separa Kerajaan">Separa Kerajaan</option>
+                <option value="Swasta">Swasta</option>
+                <option value="Bekerja Sendiri">Bekerja Sendiri</option>
+                <option value="Pelajar">Pelajar</option>
+                <option value="Tidak Bekerja">Tidak Bekerja</option>
+                <option value="Bersara">Bersara</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Alamat Ringkas *</label>
+              <input type="text" required id="edit_address" class="w-full text-slate-900 bg-white text-xs p-2.5 border rounded-lg border-slate-300">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="p-3 border-t border-slate-100 flex justify-end gap-2 bg-slate-50 rounded-b-2xl">
+        <button onclick="closeModal('editModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 rounded-lg">Batal</button>
+        <button onclick="submitEdit()" class="px-5 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow">Simpan</button>
+      </div>
+    </div>
+  </div>
+
   <!-- LOADING OVERLAY -->
   <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm hidden z-50 flex flex-col items-center justify-center">
     <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-2"></div>
@@ -523,6 +581,9 @@
             
             <!-- Tindakan Kad: Pindah & Padam (FIXED ALIGNMENT) -->
             <div class="flex items-center gap-1.5 shrink-0 mt-0.5">
+              <button onclick="openEditModal('${p.id}')" class="text-slate-500 hover:text-emerald-600 text-[10px] font-medium flex items-center justify-center gap-1 h-7 px-2.5 rounded-md border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 transition">
+                <i class="fa-solid fa-pen"></i> Edit
+              </button>
               <button onclick="openQrModal('${p.id}', '${encodeURIComponent(p.name)}', '${p.role}')" class="text-slate-500 hover:text-indigo-600 text-[10px] font-medium flex items-center justify-center gap-1 h-7 px-2.5 rounded-md border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 transition">
                 <i class="fa-solid fa-qrcode"></i> Pindah
               </button>
@@ -859,6 +920,80 @@
       }
       const byteArray = new Uint8Array(byteNumbers);
       return new Blob([byteArray], { type: mimeType });
+    }
+
+    // --- EDIT PROFILE LOGIC ---
+    async function openEditModal(userId) {
+      showLoading("Memuat turun data...");
+      try {
+        const res = await fetch(`${GAS_URL}?action=get_profile&id=${userId}&_t=${new Date().getTime()}`);
+        const result = await res.json();
+        
+        if (result.status === "success") {
+          const d = result.data;
+          document.getElementById('edit_id').value = userId;
+          document.getElementById('edit_name').value = d.name;
+          document.getElementById('edit_email').value = d.email;
+          document.getElementById('edit_gender').value = d.gender;
+          document.getElementById('edit_age').value = d.age;
+          document.getElementById('edit_employment').value = d.employment;
+          document.getElementById('edit_address').value = d.address;
+          
+          hideLoading();
+          document.getElementById("editModal").classList.remove("hidden");
+        } else {
+          hideLoading();
+          showToast("Ralat: Data tidak dijumpai.", "error");
+        }
+      } catch (err) {
+        hideLoading();
+        showToast("Ralat pelayan. Sila semak internet anda.", "error");
+      }
+    }
+
+    async function submitEdit() {
+      const form = document.getElementById("editForm");
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      
+      const id = document.getElementById('edit_id').value;
+      const updatedName = document.getElementById('edit_name').value;
+      
+      const record = {
+        id: id,
+        name: updatedName,
+        email: document.getElementById('edit_email').value,
+        gender: document.getElementById('edit_gender').value,
+        age: document.getElementById('edit_age').value,
+        employment: document.getElementById('edit_employment').value,
+        address: document.getElementById('edit_address').value
+      };
+
+      showLoading("Menyimpan maklumat...");
+      try {
+        await fetch(GAS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "update_profile", record: record })
+        });
+        
+        // Update Local Storage name so the dashboard reflects the change immediately
+        let profiles = getLocalProfiles();
+        let p = profiles.find(x => x.id === id);
+        if (p) p.name = updatedName;
+        setLocalProfiles(profiles);
+
+        hideLoading();
+        closeModal("editModal");
+        showToast("Profil berjaya dikemas kini!", "success");
+        renderDashboard();
+      } catch (err) {
+        hideLoading();
+        showToast("Ralat menyimpan data.", "error");
+      }
     }
   </script>
 </body>

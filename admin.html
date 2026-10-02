@@ -114,17 +114,23 @@
           <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 text-amber-400 text-2xl drop-shadow-md">
             <i class="fa-solid fa-location-pin"></i>
           </div>
-          <!-- Added max-w-full h-auto so wheel scales on small phones perfectly -->
           <canvas id="wheelCanvas" width="380" height="380" class="rounded-full shadow-2xl border-4 border-slate-800 bg-slate-950 max-w-full h-auto"></canvas>
         </div>
         
-        <button id="btnSpin" onclick="handleSpinClick()" class="mt-8 px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-full shadow-lg transition-all duration-300 transform active:scale-95 text-sm uppercase tracking-wider flex items-center justify-center gap-2 min-w-[200px]">
-          <i class="fa-solid fa-play"></i> Putar Roda
-        </button>
+        <!-- UPDATED BUTTONS (Putar & Shotgun) -->
+        <div class="flex items-center justify-center gap-3 mt-8 w-full max-w-[300px]">
+          <button id="btnSpin" onclick="handleSpinClick()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-full shadow-lg transition-all duration-300 transform active:scale-95 text-sm uppercase tracking-wider flex items-center justify-center gap-2">
+            <i class="fa-solid fa-play"></i> Putar
+          </button>
+          
+          <button onclick="openShotgunModal()" class="w-12 h-12 shrink-0 bg-slate-800 hover:bg-slate-700 text-amber-400 font-extrabold rounded-full shadow-lg transition-all duration-300 transform active:scale-95 text-sm flex items-center justify-center border border-slate-700" title="Cabutan Shotgun">
+            <i class="fa-solid fa-bolt"></i>
+          </button>
+        </div>
       </div>
 
-      <!-- 3. WINNER & HISTORY BOARD -->
-      <div class="w-full md:w-72 lg:w-80 shrink-0 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col h-[400px] md:h-auto md:min-h-[450px]">
+      <!-- 3. WINNER & HISTORY BOARD (Fixed Height to stop layout shift!) -->
+      <div class="w-full md:w-72 lg:w-80 shrink-0 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col h-[400px] md:h-[450px]">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <i class="fa-solid fa-trophy text-amber-400"></i> Pemenang Terpilih
         </h3>
@@ -150,6 +156,24 @@
         <p class="text-sm font-bold text-amber-400 mb-4 text-center" id="recoveryQrName"></p>
         <div id="recoveryQrcode" class="bg-white p-2.5 rounded-xl shadow-lg"></div>
         <button onclick="hideRecoveryQr()" class="mt-5 text-xs text-slate-400 hover:text-white underline">Kembali ke carian</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHOTGUN MODAL -->
+  <div id="shotgunModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-xs w-full shadow-2xl text-center space-y-4">
+      <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-2xl mb-2">
+        <i class="fa-solid fa-bolt"></i>
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-white">Mod Shotgun</h2>
+        <p class="text-xs text-slate-400 mt-1">Berapa ramai pemenang yang ingin ditarik secara serentak?</p>
+      </div>
+      <input type="number" id="shotgunCount" min="1" class="w-full text-center text-xl font-bold py-2 bg-slate-800 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500" value="5">
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeShotgunModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl font-semibold text-xs transition text-white">Batal</button>
+        <button onclick="executeShotgun()" class="flex-1 bg-amber-500 hover:bg-amber-600 py-2.5 rounded-xl font-bold text-slate-900 text-xs transition shadow-md">Tarik Cepat</button>
       </div>
     </div>
   </div>

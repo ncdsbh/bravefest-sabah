@@ -206,11 +206,20 @@
         refreshBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-[10px]"></i> Menyemak...';
       }
 
+      // KUNCI BUTANG PUTAR RODA SEMASA LOADING
+      const btnSpin = document.getElementById("btnSpin");
+      const safeToBlock = !isSpinning && !pendingSpinTimeout;
+      if (btnSpin && safeToBlock) {
+        btnSpin.disabled = true;
+        btnSpin.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menyemak Data...';
+        btnSpin.classList.add("opacity-60", "cursor-wait");
+      }
+
       try {
         const res = await fetch(`${GAS_URL}?action=admin_fetch&pin=${encodeURIComponent(adminPin)}&_t=${new Date().getTime()}`);
         const data = await res.json();
 
-        if (data.status === "error") { // Fixed typo here (was data.stus)
+        if (data.status === "error") { 
           alert("PIN Keselamatan Tidak Sah atau Telah Diubah!");
           sessionStorage.removeItem("khs_admin_pin"); 
           document.getElementById("authOverlay").classList.remove("hidden");
@@ -255,6 +264,13 @@
         if (isRefresh) {
           refreshBtn.disabled = false;
           refreshBtn.innerHTML = '<i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula';
+        }
+
+        // BUKA SEMULA BUTANG PUTAR RODA
+        if (btnSpin && safeToBlock) {
+          btnSpin.disabled = false;
+          btnSpin.innerHTML = '<i class="fa-solid fa-play"></i> Putar Roda';
+          btnSpin.classList.remove("opacity-60", "cursor-wait");
         }
       }
     }

@@ -543,7 +543,7 @@
           ${p.stigDone && p.keberkesananDone ? `
           <!-- Sijil Button (Hanya wujud jika kedua-dua tinjauan selesai) -->
           <div class="pt-2 mt-1">
-            <button onclick="downloadCert('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="w-full py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 shadow-md">
+            <button onclick="downloadCert('${p.id}', '${p.name.replace(/'/g, "\\'")}', '${p.role}')" class="w-full py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 shadow-md">
               <i class="fa-solid fa-award text-sm"></i> Muat Turun Sijil Penyertaan
             </button>
           </div>
@@ -575,19 +575,18 @@
       }
     }
 
-    async function downloadCert(userId, userName) {
+    async function downloadCert(userId, userName, userRole) {
       showLoading("Menjana sijil... Sila tunggu sebentar (10-15 saat).");
       try {
         const res = await fetch(GAS_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "generate_cert", id: userId, name: userName })
+          body: JSON.stringify({ action: "generate_cert", id: userId, name: userName, role: userRole })
         });
         
         const data = await res.json();
         
         if (data.status === "success") {
-          // Tukar fail Base64 menjadi PDF dan muat turun ke telefon
           const link = document.createElement('a');
           link.href = `data:application/pdf;base64,${data.pdfBase64}`;
           link.download = data.filename;

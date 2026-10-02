@@ -926,7 +926,8 @@
     async function openEditModal(userId) {
       showLoading("Memuat turun data...");
       try {
-        const res = await fetch(`${GAS_URL}?action=get_profile&id=${userId}&_t=${new Date().getTime()}`);
+        // FIXED: Added encodeURIComponent to safely format the userId for the URL
+        const res = await fetch(`${GAS_URL}?action=get_profile&id=${encodeURIComponent(userId)}&_t=${new Date().getTime()}`);
         const result = await res.json();
         
         if (result.status === "success") {

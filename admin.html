@@ -190,6 +190,8 @@
     let pendingSpinTimeout = null;
     let countdownInterval = null; 
     let isSpinning = false;
+
+    let wheelCacheCanvas = null; // Memori untuk pre-render roda
     
     let startAngle = 0, arc = 0, spinTimeout = null, spinAngleStart = 10, spinTime = 0, spinTimeTotal = 0, ctx;
     const colors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#06b6d4", "#84cc16"];

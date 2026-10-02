@@ -40,7 +40,7 @@
         <button onclick="openRecoveryModal()" class="bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-1.5 rounded-lg border border-indigo-500 flex items-center gap-1.5 transition text-white shadow-sm">
           <i class="fa-solid fa-life-ring"></i> Pemulihan Profil
         </button>
-        <button id="btnRefresh" onclick="loadParticipants(true)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition" title="Muat semula senarai peserta dari Google Sheets">
+        <button id="btnRefresh" onclick="loadParticipants(true)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition" title="Muat semula senarai peserta dari Database">
           <i class="fa-solid fa-rotate text-[10px]"></i> Muat Semula
         </button>
         <button onclick="logoutAdmin()" class="bg-red-900/40 hover:bg-red-800/80 text-xs px-3 py-1.5 rounded-lg border border-red-800/50 flex items-center gap-1.5 transition text-red-300">
@@ -326,7 +326,7 @@
 
     function clearWinnersFrontend() {
       if (winnersHistory.length === 0) return;
-      if (confirm("Adakah anda pasti mahu mengosongkan senarai pemenang di paparan ini?\n\n(Data di dalam Google Sheets TIDAK akan dipadam)")) {
+      if (confirm("Adakah anda pasti mahu mengosongkan senarai pemenang di paparan ini?\n\n(Data di dalam Database TIDAK akan dipadam)")) {
         winnersHistory = [];
         renderWinnersList();
       }

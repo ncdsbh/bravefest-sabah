@@ -206,10 +206,10 @@
       }
 
       try {
-        const res = await fetch(`${GAS_URL}?action=admin_fetch&pin=${encodeURIComponent(adminPin)}`);
+        const res = await fetch(`${GAS_URL}?action=admin_fetch&pin=${encodeURIComponent(adminPin)}&_t=${new Date().getTime()}`);
         const data = await res.json();
 
-        if (data.status === "error") {
+        if (data.stus === "error") {
           alert("PIN Keselamatan Tidak Sah atau Telah Diubah!");
           sessionStorage.removeItem("khs_admin_pin"); // Padam memori jika salah
           document.getElementById("authOverlay").classList.remove("hidden");

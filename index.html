@@ -442,14 +442,32 @@
 
       // Primary
       const pId = "ID-" + Date.now().toString(36) + "-0";
-      records.push({ id: pId, name: formData.get("name_0"), gender: formData.get("gender_0"), age: formData.get("age_0"), employment: formData.get("employment_0"), address: formData.get("address_0"), role: "primary" });
+      records.push({ 
+        id: pId, 
+        name: formData.get("name_0"), 
+        email: formData.get("email_0"), // CAPTURE EMAIL
+        gender: formData.get("gender_0"), 
+        age: formData.get("age_0"), 
+        employment: formData.get("employment_0"), 
+        address: formData.get("address_0"), 
+        role: "primary" 
+      });
       localProfiles.push({ id: pId, name: formData.get("name_0"), role: "primary", stigDone: false, keberkesananDone: false, checkInDate: todayStr });
 
       // Dependents
       for (let i = 1; i <= dependentCount; i++) {
         if (formData.get(`name_${i}`)) {
           const dId = "ID-" + Date.now().toString(36) + "-" + i;
-          records.push({ id: dId, name: formData.get(`name_${i}`), gender: formData.get(`gender_${i}`), age: formData.get(`age_${i}`), employment: formData.get(`employment_${i}`), address: formData.get(`address_${i}`), role: "dependent" });
+          records.push({ 
+            id: dId, 
+            name: formData.get(`name_${i}`), 
+            email: formData.get(`email_${i}`), // CAPTURE EMAIL
+            gender: formData.get(`gender_${i}`), 
+            age: formData.get(`age_${i}`), 
+            employment: formData.get(`employment_${i}`), 
+            address: formData.get(`address_${i}`), 
+            role: "dependent" 
+          });
           localProfiles.push({ id: dId, name: formData.get(`name_${i}`), role: "dependent", stigDone: false, keberkesananDone: false, checkInDate: todayStr });
         }
       }

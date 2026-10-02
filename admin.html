@@ -158,6 +158,10 @@
     let allParticipants = []; 
     let wheelParticipants = []; 
     let winnersHistory = [];
+    // Add these variables at the top
+    let pendingSpinTimeout = null;
+    let countdownInterval = null; // Tambah ini
+    let isSpinning = false;
     
     let startAngle = 0, arc = 0, spinTimeout = null, spinAngleStart = 10, spinTime = 0, spinTimeTotal = 0, ctx;
     const colors = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6", "#06b6d4", "#84cc16"];
@@ -314,24 +318,40 @@
       if (wheelParticipants.length === 0 || isSpinning) return;
       const btn = document.getElementById("btnSpin");
 
+      function handleSpinClick() {
+      if (wheelParticipants.length === 0 || isSpinning) return;
+      const btn = document.getElementById("btnSpin");
+
       // 1. If clicked while waiting, CANCEL the spin
       if (pendingSpinTimeout) {
         clearTimeout(pendingSpinTimeout);
+        clearInterval(countdownInterval); // Hentikan live countdown
         pendingSpinTimeout = null;
         resetSpinButton();
         return;
       }
 
-      // 2. Initiate the 3-second "Charge-Up" cancel window
-      btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Batal Putaran (3s)';
+      // 2. Initiate the "Charge-Up" cancel window
+      let timeLeft = 3; // Ubah jumlah saat di sini jika mahu lebih lama
+      btn.innerHTML = `<i class="fa-solid fa-xmark"></i> Batal Putaran (${timeLeft}s)`;
       btn.classList.replace('from-amber-500', 'from-red-500');
       btn.classList.replace('to-amber-600', 'to-red-600');
       btn.classList.replace('hover:from-amber-600', 'hover:from-red-600');
       btn.classList.replace('hover:to-amber-700', 'hover:to-red-700');
       btn.classList.replace('text-slate-950', 'text-white');
 
+      // Live visual countdown updating every 1000ms (1 second)
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          btn.innerHTML = `<i class="fa-solid fa-xmark"></i> Batal Putaran (${timeLeft}s)`;
+        }
+      }, 1000);
+
+      // The actual spin trigger
       pendingSpinTimeout = setTimeout(() => {
-        // Time is up, start the actual spin!
+        // Time is up, clear the interval and start the actual spin!
+        clearInterval(countdownInterval);
         pendingSpinTimeout = null;
         isSpinning = true;
         btn.disabled = true;
@@ -342,7 +362,7 @@
         spinTime = 0;
         spinTimeTotal = Math.random() * 3000 + 4000;
         rotateWheel();
-      }, 3000);
+      }, 3000); // Pastikan masa ini sama dengan nilai timeLeft (3000 = 3s)
     }
 
     // Replace your old stopRotateWheel() function with this

@@ -58,10 +58,20 @@
         <i class="fa-solid fa-chart-pie text-indigo-400"></i> Statistik Semasa
       </h3>
 
+      <!-- Kehadiran Hari Ini (Dari tab Attendance) -->
       <div class="space-y-1.5">
         <div class="flex justify-between items-end">
-          <span class="text-xs text-slate-400">Daftar Hari Ini</span>
-          <span class="text-lg font-bold text-emerald-400 leading-none" id="statTodayReg">0</span>
+          <span class="text-xs text-slate-400">Hadir Hari Ini</span>
+          <span class="text-lg font-bold text-emerald-400 leading-none" id="statTodayAtt">0</span>
+        </div>
+        <div class="w-full h-0.5 bg-slate-800 rounded-full"></div>
+      </div>
+      
+      <!-- Pendaftaran Baru Hari Ini (Dari tab Registration) -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-end">
+          <span class="text-xs text-slate-400">Daftar Baru (Hari Ini)</span>
+          <span class="text-lg font-bold text-sky-400 leading-none" id="statTodayReg">0</span>
         </div>
         <div class="w-full h-0.5 bg-slate-800 rounded-full"></div>
       </div>
@@ -184,6 +194,7 @@
     let allParticipants = []; 
     let wheelParticipants = []; 
     let winnersHistory = [];
+    let todayAttendanceCount = 0;
     
     let pendingSpinTimeout = null;
     let countdownInterval = null; 
@@ -264,6 +275,7 @@
         
         const todayStr = new Date().toDateString();
         const todayAttendeeIds = rawAttendance.filter(a => new Date(a.time).toDateString() === todayStr).map(a => a.id);
+        todayAttendanceCount = new Set(todayAttendeeIds).size; // KIRA KEHADIRAN UNIK HARI INI
         const winnerIds = rawWinners.map(w => w.id);
         
         const attMap = {};
@@ -695,7 +707,8 @@
       const surveyTarget = Math.max(1, Math.ceil(totalReg * 0.3));
 
       document.getElementById('statTotalReg').innerText = totalReg.toLocaleString();
-      document.getElementById('statTodayReg').innerText = totalRegToday.toLocaleString();
+      document.getElementById('statTodayAtt').innerText = todayAttendanceCount.toLocaleString(); // Papar Hadir Hari Ini
+      document.getElementById('statTodayReg').innerText = totalRegToday.toLocaleString(); // Papar Daftar Baru
       document.getElementById('statStig').innerText = totalStig.toLocaleString();
       document.getElementById('statKeb').innerText = totalKeb.toLocaleString();
 

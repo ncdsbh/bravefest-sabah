@@ -285,6 +285,9 @@
           
         todayAttendanceCount = new Set(todayAttendeeIds).size;
         
+        // BARIS INI PENTING UNTUK RODA CABUTAN BERTUAH
+        const winnerIds = rawWinners.map(w => w.id);
+        
         const attMap = {};
         rawAttendance.forEach(a => {
           const time = new Date(a.time).getTime();

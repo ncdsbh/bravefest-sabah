@@ -274,9 +274,16 @@
         const rawWinners = data.winners || [];
         
         const todayStr = new Date().toDateString();
-        const todayAttendeeIds = rawAttendance.filter(a => new Date(a.time).toDateString() === todayStr).map(a => a.id);
-        todayAttendanceCount = new Set(todayAttendeeIds).size; // KIRA KEHADIRAN UNIK HARI INI
-        const winnerIds = rawWinners.map(w => w.id);
+        
+        // Cipta senarai ID yang SAH dari tab Registration
+        const validParticipantIds = new Set(allParticipants.map(p => p.id));
+        
+        // HANYA ambil kehadiran jika ID mereka WUJUD dalam senarai yang sah
+        const todayAttendeeIds = rawAttendance
+          .filter(a => new Date(a.time).toDateString() === todayStr && validParticipantIds.has(a.id))
+          .map(a => a.id);
+          
+        todayAttendanceCount = new Set(todayAttendeeIds).size;
         
         const attMap = {};
         rawAttendance.forEach(a => {

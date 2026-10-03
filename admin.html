@@ -403,6 +403,17 @@
       ctx.rotate(startAngle); 
       ctx.drawImage(wheelCacheCanvas, -190, -190);
       ctx.restore();
+
+      // --- TAMBAH JUMLAH PESERTA DI TENGAH RODA (KEKAL TEGAK) ---
+      ctx.fillStyle = "#ffffff"; // Warna putih
+      ctx.font = "bold 26px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(wheelParticipants.length, 190, 184); // Lukis angka
+
+      ctx.fillStyle = "#94a3b8"; // Warna kelabu (slate-400)
+      ctx.font = "bold 9px sans-serif";
+      ctx.fillText("LAYAK", 190, 204); // Lukis label kecil di bawah angka
     }
 
     function handleSpinClick() {

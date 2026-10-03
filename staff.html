@@ -9,6 +9,22 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="text-slate-50 font-sans min-h-screen pb-16 bg-cover bg-center bg-fixed bg-no-repeat" style="background-image: linear-gradient(rgba(6, 78, 59, 0.7), rgba(6, 78, 59, 0.85)), url('BraveFest 2026 BG.jpg');">
+
+  <!-- SPLASH SCREEN OVERLAY (SKRIN ALUAN) -->
+  <div id="splashScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center transition-all duration-1000 ease-in-out bg-cover bg-center" style="background-image: linear-gradient(rgba(6, 78, 59, 0.9), rgba(15, 23, 42, 0.98)), url('BraveFest 2026 BG.jpg');">
+    <div class="text-center transform transition-all duration-1000 translate-y-8 opacity-0" id="splashContent">
+      <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(52,211,153,0.2)] backdrop-blur-md border border-white/20">
+        <i id="splashIcon" class="fa-solid fa-leaf text-5xl text-emerald-300 drop-shadow-lg"></i>
+      </div>
+      <h1 id="splashTitle" class="text-3xl font-extrabold text-white mb-2 drop-shadow-lg tracking-wide"></h1>
+      <p id="splashSub" class="text-sm text-emerald-200 font-medium tracking-widest uppercase"></p>
+      
+      <!-- Loading Spinner -->
+      <div class="mt-10 flex justify-center">
+        <div class="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin"></div>
+      </div>
+    </div>
+  </div>
   
   <!-- TOP HEADER -->
   <header class="sticky top-0 z-40 bg-black/30 backdrop-blur-md text-white p-5 shadow-lg border-b border-white/10">
@@ -324,10 +340,11 @@
     let currentActionUserId = null;
 
     window.addEventListener("DOMContentLoaded", () => {
+      // 1. Semak parameter URL untuk fungsi pemindahan (QR)
       const urlParams = new URLSearchParams(window.location.search);
       const importId = urlParams.get("importId");
       const importName = urlParams.get("importName");
-      const importRole = urlParams.get("importRole") || "staff";
+      const importRole = urlParams.get("importRole");
 
       if (importId && importName) {
         let profiles = getLocalProfiles();
@@ -335,7 +352,7 @@
           profiles.push({
             id: importId,
             name: decodeURIComponent(importName),
-            role: importRole,
+            role: importRole || "staff", // Guna "staff" untuk staff.html jika perlu
             stigDone: false,
             keberkesananDone: false,
             checkInDate: new Date().toDateString()
@@ -346,6 +363,43 @@
         showToast("Profil berjaya dipindahkan ke peranti ini!", "success");
       }
 
+      // 2. LOGIK SPLASH SCREEN (SKRIN ALUAN)
+      const profiles = getLocalProfiles();
+      const splashScreen = document.getElementById("splashScreen");
+      const splashContent = document.getElementById("splashContent");
+      const splashTitle = document.getElementById("splashTitle");
+      const splashSub = document.getElementById("splashSub");
+      const splashIcon = document.getElementById("splashIcon");
+
+      if (profiles.length === 0) {
+        // Pendaftaran Baharu
+        splashTitle.innerText = "Selamat Datang";
+        splashSub.innerText = "BRAVE Fest Sabah 2026";
+        splashIcon.className = "fa-solid fa-leaf text-5xl text-emerald-400 drop-shadow-lg";
+      } else {
+        // Pengguna Kembali (Recurrent)
+        splashTitle.innerText = "Selamat Kembali";
+        splashSub.innerText = "Semoga Terus Gembira";
+        splashIcon.className = "fa-solid fa-face-smile-beam text-5xl text-amber-400 drop-shadow-lg";
+      }
+
+      // Animasi teks naik ke atas (Fade In & Slide Up)
+      setTimeout(() => {
+        splashContent.classList.remove("translate-y-8", "opacity-0");
+        splashContent.classList.add("translate-y-0", "opacity-100");
+      }, 100);
+
+      // Hilangkan Splash Screen selepas 2 saat
+      setTimeout(() => {
+        splashScreen.classList.add("opacity-0");
+        
+        // Padam dari paparan (display: none) selepas animasi CSS (1 saat) tamat
+        setTimeout(() => {
+          splashScreen.classList.add("hidden");
+        }, 1000); 
+      }, 2000);
+
+      // 3. Render paparan di belakang skrin aluan secara senyap
       renderRatingPills();
       initView();
     });

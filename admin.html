@@ -297,15 +297,23 @@
         });
 
         const now = new Date().getTime();
-        const TWO_HOURS = 2 * 60 * 60 * 1000;
+        const TWO_HOURS = 2 * 60 * 60 * 1000; // Tetap 2 Jam
 
         wheelParticipants = allParticipants
           .filter(p => todayAttendeeIds.includes(p.id) && !winnerIds.includes(p.id))
           .map(p => {
             const pTime = attMap[p.id] || 0;
-            // +40% peluang dikira secara senyap dalam matematik backend sahaja
-            const weight = (now - pTime <= TWO_HOURS) ? 1.4 : 1.0;
-            return { ...p, weight: weight };
+            
+            // 1. Tentukan Berat Asas: Awam = 1.0, Staff = 0.9 (Kurang 10%)
+            let baseWeight = (p.role === "staff") ? 0.9 : 1.0;
+            
+            // 2. Semak Kelebihan Masa: Jika hadir dalam tempoh 2 jam, darab 1.4 (+40%)
+            let timeMultiplier = (now - pTime <= TWO_HOURS) ? 1.4 : 1.0;
+            
+            // 3. Jumlah Berat (Weight) Akhir
+            const finalWeight = baseWeight * timeMultiplier;
+            
+            return { ...p, weight: finalWeight };
           });
         
         winnersHistory = rawWinners.map(w => {

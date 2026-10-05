@@ -44,7 +44,24 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-xl mx-auto p-4 space-y-6">
 
+    <!-- VIEW 1: REGISTRATION CLOSED (MESEJ PENUTUPAN) -->
+    <section id="registrationView" class="hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
+      <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+        <i class="fa-solid fa-door-closed"></i>
+      </div>
+      <h2 class="text-xl font-bold text-slate-800 mb-2">Pendaftaran Ditutup</h2>
+      <p class="text-sm text-slate-500 leading-relaxed">
+        Acara Kempen Hentikan Stigma (BRAVE Fest Sabah 2026) telah pun melabuhkan tirai. Terima kasih atas sokongan padu anda!
+      </p>
+      
+      <!-- Butang ini hanya akan muncul jika mereka ada data untuk kembali ke dashboard -->
+      <button type="button" id="btnCancelReg" onclick="cancelRegistration()" class="hidden w-full py-3 mt-6 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold hover:bg-indigo-100 transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-arrow-left text-[14px]"></i> Kembali ke Profil Saya
+      </button>
+    </section>
+    
     <!-- VIEW 1: REGISTRATION FLOW -->
+    <!--
     <section id="registrationView" class="hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
       <h2 class="text-xl font-bold text-slate-800 mb-1">Pendaftaran Kehadiran</h2>
       <p class="text-xs text-slate-500 mb-4">Daftar untuk diri anda dan tanggungan/ahli keluarga jika ada.</p>
@@ -59,13 +76,12 @@
           <i class="fa-solid fa-arrow-right text-xs"></i>
         </button>
 
-        <!-- BUTANG BATAL (Disembunyikan secara lalai) -->
         <button type="button" id="btnCancelReg" onclick="cancelRegistration()" class="hidden w-full py-3 mt-3 border border-slate-300 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition flex items-center justify-center gap-2">
           <i class="fa-solid fa-xmark text-[14px]"></i> Batal & Kembali ke Senarai
         </button>
       </form>
     </section>
-
+    -->
     <!-- VIEW 2: DASHBOARD CARDS -->
     <section id="dashboardView" class="hidden space-y-4">
       <div class="flex items-center justify-between mb-3 px-1">
